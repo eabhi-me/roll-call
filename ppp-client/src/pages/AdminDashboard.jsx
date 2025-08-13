@@ -1,0 +1,665 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { 
+  Users, 
+  Calendar, 
+  QrCode, 
+  BarChart3, 
+  Plus, 
+  LogOut, 
+  Settings, 
+  Bell,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  XCircle,
+  History,
+  Target,
+  Activity,
+  FileText,
+  Filter,
+  Search,
+  Eye,
+  Menu,
+  X,
+  Home,
+  UserCheck,
+  ClipboardList
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const AdminDashboard = ({ user, onLogout }) => {
+  const [stats, setStats] = useState({
+    totalStudents: 1250,
+    eventsOccurredPast: 45,
+    totalEventsUpcoming: 8,
+    todayAttendance: 45,
+    totalEvents: 53,
+    averageAttendanceRate: 78
+  });
+
+  const [events, setEvents] = useState([
+    {
+      id: 1,
+      title: "Campus Recruitment Drive",
+      date: "2024-01-15",
+      time: "10:00 AM",
+      attendees: 89,
+      total: 120,
+      status: "active",
+      trade: "GCS",
+      location: "Main Auditorium"
+    },
+    {
+      id: 2,
+      title: "Industry Expert Talk",
+      date: "2024-01-14",
+      time: "2:00 PM",
+      attendees: 67,
+      total: 80,
+      status: "completed",
+      trade: "GIN",
+      location: "Room 101"
+    },
+    {
+      id: 3,
+      title: "Mock Interview Session",
+      date: "2024-01-13",
+      time: "11:00 AM",
+      attendees: 45,
+      total: 60,
+      status: "completed",
+      trade: "GEC",
+      location: "Interview Room"
+    },
+    {
+      id: 4,
+      title: "Resume Building Workshop",
+      date: "2024-01-12",
+      time: "3:00 PM",
+      attendees: 78,
+      total: 100,
+      status: "completed",
+      trade: "GME",
+      location: "Computer Lab"
+    },
+    {
+      id: 5,
+      title: "Career Guidance Session",
+      date: "2024-01-11",
+      time: "10:00 AM",
+      attendees: 92,
+      total: 110,
+      status: "completed",
+      trade: "GEE",
+      location: "Conference Hall"
+    },
+    {
+      id: 6,
+      title: "Technical Interview Prep",
+      date: "2024-01-10",
+      time: "11:00 AM",
+      attendees: 56,
+      total: 75,
+      status: "completed",
+      trade: "GFT",
+      location: "Lab 2"
+    }
+  ]);
+
+  const [filteredEvents, setFilteredEvents] = useState(events);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [tradeFilter, setTradeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [recentAttendance, setRecentAttendance] = useState([
+    {
+      id: 1,
+      studentName: "Rahul Kumar",
+      studentId: "STU001",
+      event: "Campus Recruitment Drive",
+      time: "10:15 AM",
+      status: "present"
+    },
+    {
+      id: 2,
+      studentName: "Priya Sharma",
+      studentId: "STU002",
+      event: "Campus Recruitment Drive",
+      time: "10:12 AM",
+      status: "present"
+    },
+    {
+      id: 3,
+      studentName: "Amit Patel",
+      studentId: "STU003",
+      event: "Industry Expert Talk",
+      time: "2:05 PM",
+      status: "absent"
+    }
+  ]);
+
+  const trades = [
+    'All Trades',
+    'GCS',
+    'GIN',
+    'GEC',
+    'GME',
+    'GEE',
+    'GFT',
+    'GCT'
+  ];
+
+  useEffect(() => {
+    filterEvents();
+  }, [searchTerm, tradeFilter, statusFilter, events]);
+
+  const filterEvents = () => {
+    let filtered = events;
+
+    if (searchTerm) {
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (tradeFilter !== 'all') {
+      filtered = filtered.filter(event => event.trade === tradeFilter);
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(event => event.status === statusFilter);
+    }
+
+    setFilteredEvents(filtered);
+  };
+
+  const getAttendanceRate = (attendees, total) => {
+    return Math.round((attendees / total) * 100);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      case 'upcoming':
+        return 'bg-orange-100 text-orange-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getAttendanceRateColor = (rate) => {
+    if (rate >= 80) return 'text-green-600';
+    if (rate >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const handleLogout = () => {
+    onLogout();
+    toast.success('Logged out successfully');
+  };
+
+  const navigationItems = [
+    { name: 'Dashboard', icon: Home, href: '/admin', current: true },
+    { name: 'Scan QR Code', icon: QrCode, href: '/scan', current: false },
+    { name: 'Create Event', icon: Plus, href: '/create-event', current: false },
+    { name: 'Attendance Report', icon: BarChart3, href: '/attendance-report', current: false },
+    { name: 'Manage Notices', icon: Bell, href: '/notices', current: false },
+    { name: 'Event Attendance', icon: ClipboardList, href: '#', current: false },
+    { name: 'Settings', icon: Settings, href: '#', current: false },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:hidden ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <QrCode className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-bold text-gray-900">TNP Admin</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1 text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="px-4 py-6">
+          {/* User Info */}
+          <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-medium">{user.name.charAt(0)}</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                <p className="text-xs text-gray-500">Administrator</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="space-y-1">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    item.current
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 mr-3" />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Logout */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            >
+              <LogOut className="w-5 h-5 mr-3" />
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="lg:pl-0">
+        {/* Compact Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-14">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <QrCode className="w-4 h-4 text-white" />
+                </div>
+                <h1 className="text-lg font-bold text-gray-900">TNP Admin Dashboard</h1>
+              </div>
+              
+              <div className="hidden lg:flex items-center space-x-3">
+                <button className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors">
+                  <Bell className="w-4 h-4" />
+                </button>
+                <button className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors">
+                  <Settings className="w-4 h-4" />
+                </button>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Compact Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600">Total Students</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.totalStudents}</p>
+                </div>
+                <Users className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600">Past Events</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.eventsOccurredPast}</p>
+                </div>
+                <History className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600">Upcoming</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.totalEventsUpcoming}</p>
+                </div>
+                <Target className="w-5 h-5 text-purple-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600">Today's Attendance</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.todayAttendance}</p>
+                </div>
+                <QrCode className="w-5 h-5 text-orange-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600">Total Events</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.totalEvents}</p>
+                </div>
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-600">Avg. Rate</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.averageAttendanceRate}%</p>
+                </div>
+                <TrendingUp className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Event Attendance Section - Hidden on Mobile */}
+          <div className="hidden lg:block">
+            {/* Compact Filters */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search events..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <select
+                  value={tradeFilter}
+                  onChange={(e) => setTradeFilter(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {trades.map((trade) => (
+                    <option key={trade} value={trade === 'All Trades' ? 'all' : trade}>
+                      {trade}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="upcoming">Upcoming</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Event Attendance Table */}
+              <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Event Attendance</h3>
+                    <Link
+                      to="/attendance-report"
+                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                    >
+                      View Report →
+                    </Link>
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trade</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Present</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredEvents.slice(0, 8).map((event) => {
+                        const attendanceRate = getAttendanceRate(event.attendees, event.total);
+                        return (
+                          <tr key={event.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{event.title}</p>
+                                <p className="text-xs text-gray-500">{event.date} • {event.time}</p>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs text-gray-900">{event.trade}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-sm font-medium text-gray-900">
+                                {event.attendees}/{event.total}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center">
+                                <div className="w-12 bg-gray-200 rounded-full h-1.5 mr-2">
+                                  <div 
+                                    className={`h-1.5 rounded-full ${getAttendanceRateColor(attendanceRate).replace('text-', 'bg-')}`}
+                                    style={{ width: `${attendanceRate}%` }}
+                                  ></div>
+                                </div>
+                                <span className={`text-xs font-medium ${getAttendanceRateColor(attendanceRate)}`}>
+                                  {attendanceRate}%
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
+                                {event.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex space-x-1">
+                                <Link
+                                  to={`/attendance/${event.id}`}
+                                  className="text-xs text-blue-600 hover:text-blue-700"
+                                >
+                                  View
+                                </Link>
+                                {event.status === 'active' && (
+                                  <Link
+                                    to="/scan"
+                                    className="text-xs text-green-600 hover:text-green-700"
+                                  >
+                                    Scan
+                                  </Link>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {filteredEvents.length === 0 && (
+                  <div className="text-center py-8">
+                    <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">No events found</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Quick Actions */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
+                  <div className="space-y-2">
+                    <Link
+                      to="/create-event"
+                      className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <Plus className="w-4 h-4 mr-2 text-indigo-600" />
+                      Create Event
+                    </Link>
+                    <Link
+                      to="/scan"
+                      className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <QrCode className="w-4 h-4 mr-2 text-green-600" />
+                      Scan QR Code
+                    </Link>
+                    <Link
+                      to="/attendance-report"
+                      className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2 text-purple-600" />
+                      View Reports
+                    </Link>
+                    <Link
+                      to="/notices"
+                      className="flex items-center p-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <Bell className="w-4 h-4 mr-2 text-orange-600" />
+                      Manage Notices
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Recent Attendance */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Recent Attendance</h3>
+                  <div className="space-y-2">
+                    {recentAttendance.map((record) => (
+                      <div key={record.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                        <div>
+                          <p className="text-xs font-medium text-gray-900">{record.studentName}</p>
+                          <p className="text-xs text-gray-500">{record.event}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">{record.time}</p>
+                          <div className="flex items-center">
+                            {record.status === 'present' ? (
+                              <CheckCircle className="w-3 h-3 text-green-600" />
+                            ) : (
+                              <XCircle className="w-3 h-3 text-red-600" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Summary Stats */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Summary</h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Active Events:</span>
+                      <span className="font-medium">{events.filter(e => e.status === 'active').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Avg Attendance:</span>
+                      <span className="font-medium">{stats.averageAttendanceRate}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Students:</span>
+                      <span className="font-medium">{stats.totalStudents}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Quick Actions */}
+          <div className="lg:hidden">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  to="/scan"
+                  className="flex items-center p-3 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all"
+                >
+                  <QrCode className="w-5 h-5 text-green-600 mr-2" />
+                  <span className="text-sm font-medium text-gray-900">Scan QR</span>
+                </Link>
+                <Link
+                  to="/create-event"
+                  className="flex items-center p-3 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition-all"
+                >
+                  <Plus className="w-5 h-5 text-indigo-600 mr-2" />
+                  <span className="text-sm font-medium text-gray-900">Create Event</span>
+                </Link>
+                <Link
+                  to="/attendance-report"
+                  className="flex items-center p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all"
+                >
+                  <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
+                  <span className="text-sm font-medium text-gray-900">Reports</span>
+                </Link>
+                <Link
+                  to="/notices"
+                  className="flex items-center p-3 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-all"
+                >
+                  <Bell className="w-5 h-5 text-orange-600 mr-2" />
+                  <span className="text-sm font-medium text-gray-900">Notices</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;

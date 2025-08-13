@@ -1,0 +1,29 @@
+{
+  "name": "qr-attendance-backend",
+  "version": "1.0.0",
+  "description": "Backend for QR-based attendance system",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.14.0",
+    "qrcode": "^1.5.4",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "keywords": [
+    "qr-code",
+    "attendance",
+    "express",
+    "sqlite"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
