@@ -28,118 +28,109 @@ import {
   ClipboardList
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { usersAPI, eventsAPI, attendanceAPI } from '../services/api';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState({
-    totalStudents: 1250,
-    eventsOccurredPast: 45,
-    totalEventsUpcoming: 8,
-    todayAttendance: 45,
-    totalEvents: 53,
-    averageAttendanceRate: 78
+    totalStudents: 0,
+    totalEvents: 0,
+    totalEventsUpcoming: 0,
+    todayAttendance: 0,
+    thisWeekAttendance: 0,
+    thisMonthAttendance: 0,
+    totalAttendance: 0,
+    presentAttendance: 0,
+    absentAttendance: 0,
+    averageAttendanceRate: 0
   });
 
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: "Campus Recruitment Drive",
-      date: "2024-01-15",
-      time: "10:00 AM",
-      attendees: 89,
-      total: 120,
-      status: "active",
-      trade: "GCS",
-      location: "Main Auditorium"
-    },
-    {
-      id: 2,
-      title: "Industry Expert Talk",
-      date: "2024-01-14",
-      time: "2:00 PM",
-      attendees: 67,
-      total: 80,
-      status: "completed",
-      trade: "GIN",
-      location: "Room 101"
-    },
-    {
-      id: 3,
-      title: "Mock Interview Session",
-      date: "2024-01-13",
-      time: "11:00 AM",
-      attendees: 45,
-      total: 60,
-      status: "completed",
-      trade: "GEC",
-      location: "Interview Room"
-    },
-    {
-      id: 4,
-      title: "Resume Building Workshop",
-      date: "2024-01-12",
-      time: "3:00 PM",
-      attendees: 78,
-      total: 100,
-      status: "completed",
-      trade: "GME",
-      location: "Computer Lab"
-    },
-    {
-      id: 5,
-      title: "Career Guidance Session",
-      date: "2024-01-11",
-      time: "10:00 AM",
-      attendees: 92,
-      total: 110,
-      status: "completed",
-      trade: "GEE",
-      location: "Conference Hall"
-    },
-    {
-      id: 6,
-      title: "Technical Interview Prep",
-      date: "2024-01-10",
-      time: "11:00 AM",
-      attendees: 56,
-      total: 75,
-      status: "completed",
-      trade: "GFT",
-      location: "Lab 2"
-    }
-  ]);
-
-  const [filteredEvents, setFilteredEvents] = useState(events);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [tradeFilter, setTradeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [events, setEvents] = useState([]);
+  const [recentAttendance, setRecentAttendance] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [recentAttendance, setRecentAttendance] = useState([
-    {
-      id: 1,
-      studentName: "Rahul Kumar",
-      studentId: "STU001",
-      event: "Campus Recruitment Drive",
-      time: "10:15 AM",
-      status: "present"
-    },
-    {
-      id: 2,
-      studentName: "Priya Sharma",
-      studentId: "STU002",
-      event: "Campus Recruitment Drive",
-      time: "10:12 AM",
-      status: "present"
-    },
-    {
-      id: 3,
-      studentName: "Amit Patel",
-      studentId: "STU003",
-      event: "Industry Expert Talk",
-      time: "2:05 PM",
-      status: "absent"
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      console.log('Fetching dashboard data...');
+      
+      // Fetch user statistics
+      const usersResponse = await usersAPI.getUserStats();
+      console.log('Users response:', usersResponse);
+      if (usersResponse.success) {
+        setStats(prevStats => ({
+          ...prevStats,
+          totalStudents: usersResponse.stats.summary.totalUsers
+        }));
+      }
+
+      // Fetch upcoming events
+      const eventsResponse = await eventsAPI.getUpcomingEvents({ limit: 10 });
+      console.log('Events response:', eventsResponse);
+      if (eventsResponse.success) {
+        setEvents(eventsResponse.events.slice(0, 6)); // Show only 6 events
+        
+        const today = new Date().toISOString().split('T')[0];
+        const todayEvents = eventsResponse.events.filter(e => e.date === today).length;
+        
+        setStats(prevStats => ({
+          ...prevStats,
+          totalEvents: eventsResponse.events.length,
+          totalEventsUpcoming: eventsResponse.events.length,
+          eventsOccurredPast: 0 // We'll calculate this from attendance data
+        }));
+      }
+
+      // Fetch comprehensive attendance statistics
+      const attendanceStatsResponse = await attendanceAPI.getAttendanceStats();
+      console.log('Attendance stats response:', attendanceStatsResponse);
+      if (attendanceStatsResponse.success) {
+        const stats = attendanceStatsResponse.data;
+        setRecentAttendance(stats.recentAttendance || []);
+        
+        setStats(prevStats => ({
+          ...prevStats,
+          todayAttendance: stats.today?.present || 0,
+          thisWeekAttendance: stats.thisWeek?.present || 0,
+          thisMonthAttendance: stats.thisMonth?.present || 0,
+          totalAttendance: stats.overall?.total || 0,
+          presentAttendance: stats.overall?.present || 0,
+          absentAttendance: stats.overall?.absent || 0,
+          averageAttendanceRate: stats.overall?.total > 0 ? Math.round((stats.overall.present / stats.overall.total) * 100) : 0
+        }));
+      } else {
+        // Fallback to basic attendance data
+        const attendanceResponse = await attendanceAPI.getAttendanceReport({ limit: 5 });
+        console.log('Fallback attendance response:', attendanceResponse);
+        if (attendanceResponse.success) {
+          setRecentAttendance(attendanceResponse.attendance.slice(0, 5));
+          
+          if (attendanceResponse.stats) {
+            setStats(prevStats => ({
+              ...prevStats,
+              todayAttendance: attendanceResponse.stats.present || 0,
+              thisWeekAttendance: 0,
+              thisMonthAttendance: 0,
+              totalAttendance: attendanceResponse.stats.total || 0,
+              presentAttendance: attendanceResponse.stats.present || 0,
+              absentAttendance: attendanceResponse.stats.absent || 0,
+              averageAttendanceRate: attendanceResponse.stats.attendanceRate || 0
+            }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Fetch dashboard data error:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const trades = [
     'All Trades',
@@ -151,6 +142,11 @@ const AdminDashboard = ({ user, onLogout }) => {
     'GFT',
     'GCT'
   ];
+
+  const [filteredEvents, setFilteredEvents] = useState(events);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [tradeFilter, setTradeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     filterEvents();
@@ -349,10 +345,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-600">Past Events</p>
-                  <p className="text-lg font-bold text-gray-900">{stats.eventsOccurredPast}</p>
+                  <p className="text-xs font-medium text-gray-600">Total Events</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.totalEvents}</p>
                 </div>
-                <History className="w-5 h-5 text-green-600" />
+                <Calendar className="w-5 h-5 text-blue-600" />
               </div>
             </div>
 
@@ -379,10 +375,10 @@ const AdminDashboard = ({ user, onLogout }) => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-600">Total Events</p>
-                  <p className="text-lg font-bold text-gray-900">{stats.totalEvents}</p>
+                  <p className="text-xs font-medium text-gray-600">This Week</p>
+                  <p className="text-lg font-bold text-gray-900">{stats.thisWeekAttendance}</p>
                 </div>
-                <Calendar className="w-5 h-5 text-blue-600" />
+                <TrendingUp className="w-5 h-5 text-green-600" />
               </div>
             </div>
 
@@ -392,7 +388,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <p className="text-xs font-medium text-gray-600">Avg. Rate</p>
                   <p className="text-lg font-bold text-gray-900">{stats.averageAttendanceRate}%</p>
                 </div>
-                <TrendingUp className="w-5 h-5 text-green-600" />
+                <BarChart3 className="w-5 h-5 text-green-600" />
               </div>
             </div>
           </div>
@@ -440,16 +436,16 @@ const AdminDashboard = ({ user, onLogout }) => {
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Event Attendance Table */}
+              {/* Upcoming Events */}
               <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="px-4 py-3 border-b border-gray-200">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900">Event Attendance</h3>
+                    <h3 className="text-sm font-semibold text-gray-900">Upcoming Events</h3>
                     <Link
-                      to="/attendance-report"
+                      to="/notices"
                       className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                     >
-                      View Report →
+                      View All →
                     </Link>
                   </div>
                 </div>
@@ -459,79 +455,71 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trade</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Present</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Attendees</th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {filteredEvents.slice(0, 8).map((event) => {
-                        const attendanceRate = getAttendanceRate(event.attendees, event.total);
-                        return (
-                          <tr key={event.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">{event.title}</p>
-                                <p className="text-xs text-gray-500">{event.date} • {event.time}</p>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="text-xs text-gray-900">{event.trade}</span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="text-sm font-medium text-gray-900">
-                                {event.attendees}/{event.total}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex items-center">
-                                <div className="w-12 bg-gray-200 rounded-full h-1.5 mr-2">
-                                  <div 
-                                    className={`h-1.5 rounded-full ${getAttendanceRateColor(attendanceRate).replace('text-', 'bg-')}`}
-                                    style={{ width: `${attendanceRate}%` }}
-                                  ></div>
-                                </div>
-                                <span className={`text-xs font-medium ${getAttendanceRateColor(attendanceRate)}`}>
-                                  {attendanceRate}%
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                                {event.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex space-x-1">
-                                <Link
-                                  to={`/attendance/${event.id}`}
-                                  className="text-xs text-blue-600 hover:text-blue-700"
-                                >
-                                  View
-                                </Link>
-                                {event.status === 'active' && (
-                                  <Link
-                                    to="/scan"
-                                    className="text-xs text-green-600 hover:text-green-700"
-                                  >
-                                    Scan
-                                  </Link>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {events.map((event) => (
+                        <tr key={event._id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{event.title}</p>
+                              {event.description && (
+                                <p className="text-xs text-gray-500 truncate max-w-xs">{event.description}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              event.event_type === 'Event' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {event.event_type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="text-sm text-gray-900">{event.date}</p>
+                              <p className="text-xs text-gray-500">{event.time}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-900">{event.location}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-medium text-gray-900">
+                              {event.attendee_count || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex space-x-1">
+                              <Link
+                                to="/scan"
+                                className="text-xs text-green-600 hover:text-green-700 font-medium"
+                              >
+                                Scan QR
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
                 
-                {filteredEvents.length === 0 && (
+                {events.length === 0 && (
                   <div className="text-center py-8">
                     <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">No events found</p>
+                    <p className="text-sm text-gray-500">No upcoming events</p>
+                    <Link
+                      to="/create-event"
+                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium mt-2 inline-block"
+                    >
+                      Create Event →
+                    </Link>
                   </div>
                 )}
               </div>

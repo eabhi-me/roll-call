@@ -19,84 +19,24 @@ import {
   Smartphone
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { attendanceAPI } from '../services/api';
 
 const AttendanceReport = ({ user, onLogout }) => {
-  const [attendanceData, setAttendanceData] = useState([
-    {
-      id: 1,
-      studentName: "Rahul Kumar",
-      studentId: "STU001",
-      trade: "Computer Science Engineering",
-      eventName: "Campus Recruitment Drive",
-      eventType: "Event",
-      date: "2024-01-15",
-      status: "present",
-      attendanceTime: "10:05 AM",
-      location: "Main Auditorium"
-    },
-    {
-      id: 2,
-      studentName: "Priya Sharma",
-      studentId: "STU002",
-      trade: "Information Technology",
-      eventName: "Industry Expert Talk",
-      eventType: "Event",
-      date: "2024-01-14",
-      status: "present",
-      attendanceTime: "2:03 PM",
-      location: "Room 101"
-    },
-    {
-      id: 3,
-      studentName: "Amit Patel",
-      studentId: "STU003",
-      trade: "Electronics & Communication",
-      eventName: "Mock Interview Session",
-      eventType: "TNP Meeting",
-      date: "2024-01-13",
-      status: "absent",
-      attendanceTime: null,
-      location: "Interview Room"
-    },
-    {
-      id: 4,
-      studentName: "Neha Singh",
-      studentId: "STU004",
-      trade: "Mechanical Engineering",
-      eventName: "Resume Building Workshop",
-      eventType: "Event",
-      date: "2024-01-12",
-      status: "present",
-      attendanceTime: "3:02 PM",
-      location: "Computer Lab"
-    },
-    {
-      id: 5,
-      studentName: "Vikram Verma",
-      studentId: "STU005",
-      trade: "Civil Engineering",
-      eventName: "Career Guidance Session",
-      eventType: "TNP Meeting",
-      date: "2024-01-11",
-      status: "present",
-      attendanceTime: "9:58 AM",
-      location: "Conference Hall"
-    }
-  ]);
-
-  const [filteredData, setFilteredData] = useState(attendanceData);
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [tradeFilter, setTradeFilter] = useState('all');
   const [eventTypeFilter, setEventTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   const [stats, setStats] = useState({
-    totalStudents: 125,
-    presentCount: 98,
-    absentCount: 27,
-    attendanceRate: 78,
-    totalEvents: 15
+    totalStudents: 0,
+    presentCount: 0,
+    absentCount: 0,
+    attendanceRate: 0,
+    totalEvents: 0
   });
 
   const trades = [
@@ -111,6 +51,30 @@ const AttendanceReport = ({ user, onLogout }) => {
   ];
 
   const eventTypes = ['All Types', 'Event', 'TNP Meeting'];
+
+  useEffect(() => {
+    fetchAttendanceReport();
+  }, []);
+
+  const fetchAttendanceReport = async () => {
+    try {
+      setLoading(true);
+      const response = await attendanceAPI.getAttendanceReport();
+      
+      if (response.success) {
+        setAttendanceData(response.attendance);
+        setFilteredData(response.attendance);
+        setStats(response.stats);
+      } else {
+        toast.error('Failed to fetch attendance report');
+      }
+    } catch (error) {
+      console.error('Fetch attendance report error:', error);
+      toast.error('Failed to fetch attendance report');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     filterData();

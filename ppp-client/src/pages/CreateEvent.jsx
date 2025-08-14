@@ -1,331 +1,348 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { QRCodeSVG } from 'qrcode.react';
 import { 
-  ArrowLeft, 
   Calendar, 
   Clock, 
   MapPin, 
-  Users, 
   FileText, 
-  QrCode, 
-  LogOut,
   Plus,
-  Save,
-  Eye
+  ArrowLeft,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const CreateEvent = ({ user, onLogout }) => {
-  const [loading, setLoading] = useState(false);
-  const [showQR, setShowQR] = useState(false);
-  const [generatedEvent, setGeneratedEvent] = useState(null);
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    event_type: 'Event',
+    date: '',
+    time: '',
+    location: ''
+  });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    watch,
-    reset
-  } = useForm();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  const eventTitle = watch('title');
+  const validateForm = () => {
+    const errors = [];
 
-  const onSubmit = async (data) => {
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    if (!formData.title.trim()) {
+      errors.push('Title is required');
+    } else if (formData.title.trim().length < 3) {
+      errors.push('Title must be at least 3 characters long');
+    }
+
+    if (!formData.date) {
+      errors.push('Date is required');
+    } else {
+      const selectedDate = new Date(formData.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       
-      // Generate event data
-      const eventData = {
-        id: Date.now(),
-        title: data.title,
-        description: data.description,
-        date: data.date,
-        time: data.time,
-        location: data.location,
-        department: data.department,
-        qrCode: `EVENT_${Date.now()}_QR_CODE`,
-        status: 'upcoming',
-        createdAt: new Date().toISOString()
-      };
+      if (selectedDate < today) {
+        errors.push('Date cannot be in the past');
+      }
+    }
 
-      setGeneratedEvent(eventData);
-      setShowQR(true);
-      toast.success('Event created successfully!');
+    if (!formData.time) {
+      errors.push('Time is required');
+    }
+
+    if (!formData.location.trim()) {
+      errors.push('Location is required');
+    } else if (formData.location.trim().length < 3) {
+      errors.push('Location must be at least 3 characters long');
+    }
+
+    return errors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const errors = validateForm();
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success('Event created successfully!');
+        navigate('/admin');
+      } else {
+        toast.error(result.error || 'Failed to create event');
+      }
     } catch (error) {
+      console.error('Create event error:', error);
       toast.error('Failed to create event. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleLogout = () => {
     onLogout();
-    toast.success('Logged out successfully');
-  };
-
-  const handleCreateAnother = () => {
-    setShowQR(false);
-    setGeneratedEvent(null);
-    reset();
+    navigate('/login');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/admin"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to Dashboard</span>
-              </Link>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
+          
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Create New Event
+          </h1>
+          
+          <div className="w-20"></div>
+        </motion.div>
+
+        {/* Create Event Form */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-xl p-8"
+        >
+          <div className="flex items-center space-x-4 mb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+              <Plus className="w-8 h-8 text-white" />
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleLogout}
-                className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Event Details</h2>
+              <p className="text-gray-600">Fill in the details to create a new event</p>
             </div>
           </div>
-        </div>
-      </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!showQR ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Event</h1>
-              <p className="text-gray-600">Schedule a new TNP event and generate QR code for attendance</p>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FileText className="w-4 h-4 inline mr-2" />
+                Event Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="Enter event title"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                maxLength={150}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.title.length}/150 characters
+              </p>
             </div>
 
-            {/* Form */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* Event Title */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Event Title *</label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      {...register('title', {
-                        required: 'Event title is required',
-                        minLength: {
-                          value: 3,
-                          message: 'Title must be at least 3 characters',
-                        },
-                      })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      placeholder="Enter event title"
-                    />
-                  </div>
-                  {errors.title && (
-                    <p className="text-red-500 text-sm">{errors.title.message}</p>
-                  )}
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    {...register('description')}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="Enter event description (optional)"
-                  />
-                </div>
-
-                {/* Date and Time */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Date *</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="date"
-                        {...register('date', {
-                          required: 'Date is required',
-                        })}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                    {errors.date && (
-                      <p className="text-red-500 text-sm">{errors.date.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Start Time *</label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="time"
-                        {...register('time', {
-                          required: 'Start time is required',
-                        })}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                    {errors.time && (
-                      <p className="text-red-500 text-sm">{errors.time.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Duration and Location */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Location *</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="text"
-                        {...register('location', {
-                          required: 'Location is required',
-                        })}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        placeholder="Enter venue location"
-                      />
-                    </div>
-                    {errors.location && (
-                      <p className="text-red-500 text-sm">{errors.location.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Max Attendees and Department */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Target Department</label>
-                    <select
-                      {...register('department')}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    >
-                      <option value="">All Departments</option>
-                      <option value="Computer Science">Computer Science</option>
-                      <option value="Information Technology">Information Technology</option>
-                      <option value="Electronics">Electronics</option>
-                      <option value="Mechanical">Mechanical</option>
-                      <option value="Civil">Civil</option>
-                      <option value="Chemical">Chemical</option>
-                      <option value="TNP">TNP</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Creating Event...
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center">
-                      <Plus className="w-5 h-5 mr-2" />
-                      Create Event
-                    </div>
-                  )}
-                </motion.button>
-              </form>
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FileText className="w-4 h-4 inline mr-2" />
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Enter event description (optional)"
+                rows={4}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.description.length}/500 characters
+              </p>
             </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            {/* Success Header */}
-            <div className="mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                <QrCode className="w-8 h-8 text-green-600" />
+
+            {/* Event Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="w-4 h-4 inline mr-2" />
+                Event Type *
+              </label>
+              <select
+                name="event_type"
+                value={formData.event_type}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="Event">Event</option>
+                <option value="TNP Meeting">TNP Meeting</option>
+              </select>
+            </div>
+
+            {/* Date and Time Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Calendar className="w-4 h-4 inline mr-2" />
+                  Date *
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Event Created Successfully!</h1>
-            </div>
 
-            {/* Event Details */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Event Info */}
-                <div className="text-left">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Event Details</h2>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Event Title</p>
-                      <p className="text-gray-900">{generatedEvent.title}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Date & Time</p>
-                      <p className="text-gray-900">{generatedEvent.date} at {generatedEvent.time}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Duration</p>
-                      <p className="text-gray-900">{generatedEvent.duration} hours</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Location</p>
-                      <p className="text-gray-900">{generatedEvent.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Max Attendees</p>
-                      <p className="text-gray-900">{generatedEvent.maxAttendees} students</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Event ID</p>
-                      <p className="text-gray-900 font-mono">{generatedEvent.id}</p>
-                    </div>
-                  </div>
-                </div>
-
-                
+              {/* Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Clock className="w-4 h-4 inline mr-2" />
+                  Time *
+                </label>
+                <input
+                  type="time"
+                  name="time"
+                  value={formData.time}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <MapPin className="w-4 h-4 inline mr-2" />
+                Location *
+              </label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="Enter event location"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                maxLength={200}
+              />
+            </div>
+
+            {/* Form Preview */}
+            {formData.title && formData.date && formData.time && formData.location && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+              >
+                <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Event Preview
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-blue-800">Title:</span>
+                    <span className="text-blue-700">{formData.title}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-blue-800">Type:</span>
+                    <span className="text-blue-700">{formData.event_type}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-blue-800">Date & Time:</span>
+                    <span className="text-blue-700">
+                      {formData.date} at {formData.time}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-blue-800">Location:</span>
+                    <span className="text-blue-700">{formData.location}</span>
+                  </div>
+                  {formData.description && (
+                    <div className="flex items-start space-x-2">
+                      <span className="font-medium text-blue-800">Description:</span>
+                      <span className="text-blue-700">{formData.description}</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Submit Button */}
+            <div className="flex space-x-4 pt-6">
               <button
-                onClick={handleCreateAnother}
-                className="flex items-center justify-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
-                <Plus className="w-5 h-5 mr-2" />
-                Create Another Event
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Creating Event...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    <span>Create Event</span>
+                  </>
+                )}
               </button>
-              <Link
-                to="/admin"
-                className="flex items-center justify-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              
+              <button
+                type="button"
+                onClick={() => navigate('/admin')}
+                className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                <Eye className="w-5 h-5 mr-2" />
-                View Dashboard
-              </Link>
+                Cancel
+              </button>
             </div>
-          </motion.div>
-        )}
+          </form>
+
+          {/* Tips */}
+          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center space-x-2 text-yellow-800 mb-2">
+              <AlertCircle className="w-5 h-5" />
+              <span className="font-medium">Tips for creating events:</span>
+            </div>
+            <ul className="text-sm text-yellow-700 space-y-1">
+              <li>• Choose a clear and descriptive title</li>
+              <li>• Provide a detailed description to help students understand the event</li>
+              <li>• Select the appropriate event type (Event or TNP Meeting)</li>
+              <li>• Ensure the date is not in the past</li>
+              <li>• Provide a specific location for easy navigation</li>
+            </ul>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

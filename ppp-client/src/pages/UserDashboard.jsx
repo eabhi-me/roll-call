@@ -26,73 +26,117 @@ import {
   Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { eventsAPI, attendanceAPI, noticesAPI } from '../services/api';
 
 const UserDashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState({
-    totalEventsAttended: 12,
-    attendanceRate: 80,
-    consecutiveAttendance: 5,
-    upcomingEvents: 3
+    totalEventsAttended: 0,
+    totalEvents: 0,
+    attendanceRate: 0,
+    todayAttendance: 0,
+    thisWeekAttendance: 0,
+    thisMonthAttendance: 0,
+    upcomingEvents: 0
   });
 
-  const [upcomingEvents, setUpcomingEvents] = useState([
-    {
-      id: 1,
-      title: "Campus Recruitment Drive",
-      date: "2024-01-20",
-      time: "10:00 AM - 2:00 PM",
-      location: "Main Auditorium",
-      type: "Event",
-      trade: "GCS",
-      description: "Annual campus recruitment drive with top companies"
-    },
-    {
-      id: 2,
-      title: "Mock Interview Session",
-      date: "2024-01-22",
-      time: "11:00 AM - 1:00 PM",
-      location: "Interview Room",
-      type: "TNP Meeting",
-      trade: "GCS",
-      description: "Practice interview session for placement preparation"
-    },
-    {
-      id: 3,
-      title: "Industry Expert Talk",
-      date: "2024-01-25",
-      time: "2:00 PM - 4:00 PM",
-      location: "Room 101",
-      type: "Event",
-      trade: "GIN",
-      description: "Guest lecture by industry experts on emerging technologies"
-    }
-  ]);
-
-  const [recentAttendance, setRecentAttendance] = useState([
-    {
-      id: 1,
-      eventName: "Resume Building Workshop",
-      date: "2024-01-12",
-      status: "present",
-      time: "3:02 PM"
-    },
-    {
-      id: 2,
-      eventName: "Career Guidance Session",
-      date: "2024-01-11",
-      status: "present",
-      time: "9:58 AM"
-    },
-    {
-      id: 3,
-      eventName: "Technical Interview Prep",
-      date: "2024-01-10",
-      status: "absent",
-      time: null
-    }
-  ]);
-
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [recentAttendance, setRecentAttendance] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      console.log('Fetching user dashboard data...');
+      console.log('User object:', user);
+      
+      // Fetch upcoming events
+      const eventsResponse = await noticesAPI.getUpcomingNotices();
+      console.log('Events response:', eventsResponse);
+      if (eventsResponse.success) {
+        setUpcomingEvents(eventsResponse.events.slice(0, 5)); // Show only 5 upcoming events
+      }
+
+      // Fetch user's attendance statistics
+      const userId = user._id || user.id;
+      console.log('Using user ID:', userId);
+      const attendanceStatsResponse = await attendanceAPI.getUserAttendanceStats(userId);
+      console.log('Attendance stats response:', attendanceStatsResponse);
+      if (attendanceStatsResponse.success) {
+        const stats = attendanceStatsResponse.data;
+        setRecentAttendance(stats.recentAttendance || []);
+        
+        // Calculate comprehensive stats
+        setStats({
+          totalEventsAttended: stats.overall?.present || 0,
+          totalEvents: stats.overall?.total || 0,
+          attendanceRate: stats.overall?.total > 0 ? Math.round((stats.overall.present / stats.overall.total) * 100) : 0,
+          todayAttendance: stats.today?.present || 0,
+          thisWeekAttendance: stats.thisWeek?.present || 0,
+          thisMonthAttendance: stats.thisMonth?.present || 0,
+          upcomingEvents: eventsResponse.success ? eventsResponse.events.length : 0
+        });
+      } else {
+        // Fallback to basic attendance data
+        const attendanceResponse = await attendanceAPI.getUserAttendance(userId);
+        console.log('Fallback attendance response:', attendanceResponse);
+        if (attendanceResponse.success) {
+          setRecentAttendance(attendanceResponse.attendance.slice(0, 5));
+          
+          const totalEvents = attendanceResponse.attendance.length;
+          const presentCount = attendanceResponse.attendance.filter(a => a.status === 'present').length;
+          const attendanceRate = totalEvents > 0 ? Math.round((presentCount / totalEvents) * 100) : 0;
+          
+          setStats({
+            totalEventsAttended: presentCount,
+            totalEvents: totalEvents,
+            attendanceRate: attendanceRate,
+            todayAttendance: 0,
+            thisWeekAttendance: 0,
+            thisMonthAttendance: 0,
+            upcomingEvents: eventsResponse.success ? eventsResponse.events.length : 0
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Fetch dashboard data error:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateConsecutiveAttendance = (attendanceRecords) => {
+    // Sort by date descending and count consecutive present records
+    const sortedRecords = attendanceRecords
+      .filter(a => a.status === 'present')
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    let consecutive = 0;
+    for (let i = 0; i < sortedRecords.length; i++) {
+      if (i === 0) {
+        consecutive = 1;
+        continue;
+      }
+      
+      const currentDate = new Date(sortedRecords[i].date);
+      const prevDate = new Date(sortedRecords[i-1].date);
+      const diffDays = Math.floor((prevDate - currentDate) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        consecutive++;
+      } else {
+        break;
+      }
+    }
+    
+    return consecutive;
+  };
 
   const handleLogout = () => {
     onLogout();
@@ -260,8 +304,8 @@ const UserDashboard = ({ user, onLogout }) => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-600">Consecutive</p>
-                  <p className="text-lg font-bold text-purple-600">{stats.consecutiveAttendance}</p>
+                  <p className="text-xs font-medium text-gray-600">This Week</p>
+                  <p className="text-lg font-bold text-purple-600">{stats.thisWeekAttendance}</p>
                 </div>
                 <Target className="w-5 h-5 text-purple-600" />
               </div>
@@ -297,18 +341,20 @@ const UserDashboard = ({ user, onLogout }) => {
               <div className="p-4">
                 <div className="space-y-4">
                   {upcomingEvents.map((event) => (
-                    <div key={event.id} className="flex items-start space-x-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={event._id || event.id} className="flex items-start space-x-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Calendar className="w-4 h-4 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-1">
                           <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(event.type)}`}>
-                            {event.type}
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(event.event_type)}`}>
+                            {event.event_type}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 mb-2">{event.description}</p>
+                        {event.description && (
+                          <p className="text-xs text-gray-600 mb-2">{event.description}</p>
+                        )}
                         <div className="flex items-center space-x-4 text-xs text-gray-500">
                           <span className="flex items-center">
                             <Clock className="w-3 h-3 mr-1" />
@@ -375,10 +421,10 @@ const UserDashboard = ({ user, onLogout }) => {
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Recent Attendance</h3>
                 <div className="space-y-2">
                   {recentAttendance.map((record) => (
-                    <div key={record.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                    <div key={record._id || record.id || `${record.eventName}-${record.date}`} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                       <div>
-                        <p className="text-xs font-medium text-gray-900">{record.eventName}</p>
-                        <p className="text-xs text-gray-500">{record.date}</p>
+                        <p className="text-xs font-medium text-gray-900">{record.eventName || record.event_id?.title}</p>
+                        <p className="text-xs text-gray-500">{record.date || record.createdAt}</p>
                       </div>
                       <div className="text-right">
                         <div className="flex items-center">
@@ -391,6 +437,12 @@ const UserDashboard = ({ user, onLogout }) => {
                     </div>
                   ))}
                 </div>
+                
+                {recentAttendance.length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-xs text-gray-500">No recent attendance records</p>
+                  </div>
+                )}
               </div>
 
               

@@ -13,30 +13,64 @@ import {
 import { Link } from 'react-router-dom';
 import QRCodeReact from 'qrcode.react';
 import toast from 'react-hot-toast';
+import { qrAPI } from '../services/api';
 
 const QRCodePage = ({ user, onLogout }) => {
   const [qrValue, setQrValue] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [shared, setShared] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      // Generate QR code value with user information
-      const qrData = {
-        userId: user.id || user.studentId,
-        name: user.name,
-        studentId: user.studentId,
-        trade: user.trade,
-        timestamp: new Date().toISOString()
-      };
-      setQrValue(JSON.stringify(qrData));
+      fetchUserQRCode();
     }
   }, [user]);
+
+  const fetchUserQRCode = async () => {
+    try {
+      setLoading(true);
+      const response = await qrAPI.getUserQR(user._id || user.id);
+      
+      if (response.qrCodeData) {
+        setQrValue(response.qrCodeData);
+        setQrCodeUrl(response.qrCodeUrl);
+      } else {
+        // Fallback to generating QR code locally
+        const qrData = {
+          userId: user._id || user.id,
+          rollNo: user.roll_no,
+          name: user.name,
+          trade: user.trade,
+          timestamp: new Date().toISOString(),
+          type: 'user_attendance'
+        };
+        setQrValue(JSON.stringify(qrData));
+        toast.error('Failed to fetch QR code from server, using local fallback');
+      }
+    } catch (error) {
+      console.error('Fetch QR code error:', error);
+      // Fallback to generating QR code locally
+      const qrData = {
+        userId: user._id || user.id,
+        rollNo: user.roll_no,
+        name: user.name,
+        trade: user.trade,
+        timestamp: new Date().toISOString(),
+        type: 'user_attendance'
+      };
+      setQrValue(JSON.stringify(qrData));
+      toast.error('Failed to fetch QR code from server, using local fallback');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDownload = () => {
     const canvas = document.querySelector('canvas');
     if (canvas) {
       const link = document.createElement('a');
-      link.download = `qr-code-${user?.name || 'user'}.png`;
+      link.download = `qr-code-${user?.name || 'user'}-${user?.roll_no || 'user'}.png`;
       link.href = canvas.toDataURL();
       link.click();
       toast.success('QR Code downloaded successfully!');
@@ -48,13 +82,13 @@ const QRCodePage = ({ user, onLogout }) => {
       const canvas = document.querySelector('canvas');
       let shareData = {
         title: 'My Attendance QR Code',
-        text: `QR Code for ${user?.name} - Student ID: ${user?.studentId}`,
+        text: `QR Code for ${user?.name} - Roll Number: ${user?.roll_no}`,
       };
 
       // Try to share the QR code image if canvas is available
       if (canvas && navigator.canShare && navigator.canShare({ files: [] })) {
         canvas.toBlob(async (blob) => {
-          const file = new File([blob], `qr-code-${user?.name || 'user'}.png`, { type: 'image/png' });
+          const file = new File([blob], `qr-code-${user?.name || 'user'}-${user?.roll_no || 'user'}.png`, { type: 'image/png' });
           shareData.files = [file];
           
           try {
@@ -150,7 +184,7 @@ const QRCodePage = ({ user, onLogout }) => {
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-900 mb-1">{user.name}</h2>
-              <p className="text-gray-600 mb-1">Student ID: {user.studentId}</p>
+              <p className="text-gray-600 mb-1">Roll Number: {user.roll_no}</p>
               <p className="text-gray-600">{user.trade}</p>
             </div>
             <div className="text-right">

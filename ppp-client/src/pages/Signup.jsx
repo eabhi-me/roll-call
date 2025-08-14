@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, GraduationCap, Book, Building } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, GraduationCap, Book } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 const Signup = ({ onSignup }) => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState('user');
 
   const {
     register,
@@ -23,23 +23,94 @@ const Signup = ({ onSignup }) => {
   const handleSignup = async (data) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock registration - in real app, this would be an API call
+      // Validate required fields
+      if (!data.name || !data.email || !data.password || !data.roll_no || !data.trade) {
+        toast.error('Please fill in all required fields');
+        setLoading(false);
+        return;
+      }
+
+      // Test backend connection first
+      try {
+        const testResponse = await fetch('http://localhost:5000/api/test-cors', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!testResponse.ok) {
+          console.error('Backend connection test failed:', testResponse.status);
+          toast.error('Cannot connect to server. Please check if the backend is running.');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Backend connection test successful');
+      } catch (testError) {
+        console.error('Backend connection test error:', testError);
+        toast.error('Cannot connect to server. Please check if the backend is running on port 5000.');
+        setLoading(false);
+        return;
+      }
+
+      // Prepare user data according to backend model
       const userData = {
-        id: Date.now(),
-        email: data.email,
-        name: data.name,
-        department: data.department,
-        role: role,
-        studentId: role === 'user' ? `${data.roll_no}` : null,
+        name: data.name.trim(),
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        trade: data.trade,
+        roll_no: data.roll_no.trim(),
+        role: 'user' // Default role for signup
       };
 
-      onSignup(userData);
-      toast.success(`Welcome, ${userData.name}! Your account has been created successfully.`);
+      console.log('Sending signup data:', { ...userData, password: '[HIDDEN]' });
+
+      // Make API call to backend
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      console.log('Signup response status:', response.status);
+      const result = await response.json();
+      console.log('Signup response:', result);
+
+      if (response.ok && result.message && result.user && result.token) {
+        // Store token in localStorage
+        localStorage.setItem('token', result.token);
+        
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        // Call the onSignup callback to update parent state
+        onSignup(result.user);
+        
+        // Show success message
+        toast.success(`Welcome, ${result.user.name}! Your account has been created successfully.`);
+        
+        // Debug: Log user role for navigation
+        console.log('User role for navigation:', result.user.role);
+        
+        // Navigate to appropriate dashboard based on role
+        if (result.user.role === 'admin') {
+          console.log('Navigating to admin dashboard');
+          navigate('/admin');
+        } else {
+          console.log('Navigating to user dashboard');
+          navigate('/dashboard');
+        }
+      } else {
+        // Handle backend validation errors
+        const errorMessage = result.error || 'Registration failed. Please try again.';
+        toast.error(errorMessage);
+      }
     } catch (error) {
-      toast.error('Registration failed. Please try again.');
+      console.error('Signup error:', error);
+      toast.error('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -74,12 +145,11 @@ const Signup = ({ onSignup }) => {
           transition={{ delay: 0.3 }}
           className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
         >
-          <form onSubmit={handleSignup} className="space-y-6">
-          
-
+          <form onSubmit={handleSubmit(handleSignup)} className="space-y-6">
+            
             {/* Name Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Full Name</label>
+              <label className="text-sm font-medium text-gray-700">Full Name *</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -89,6 +159,10 @@ const Signup = ({ onSignup }) => {
                     minLength: {
                       value: 2,
                       message: 'Name must be at least 2 characters',
+                    },
+                    maxLength: {
+                      value: 100,
+                      message: 'Name must be less than 100 characters',
                     },
                   })}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
@@ -102,7 +176,7 @@ const Signup = ({ onSignup }) => {
 
             {/* Email Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Email</label>
+              <label className="text-sm font-medium text-gray-700">Email *</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -123,15 +197,23 @@ const Signup = ({ onSignup }) => {
               )}
             </div>
 
-            {/* RollNo Field */}
-            <div className="space-y-2">Roll No.
-              <label className="text-sm font-medium text-gray-700"></label>
+            {/* Roll Number Field */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Roll Number *</label>
               <div className="relative">
                 <Book className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
-                  type="alphaNum"
+                  type="text"
                   {...register('roll_no', {
                     required: 'Roll number is required',
+                    minLength: {
+                      value: 1,
+                      message: 'Roll number is required',
+                    },
+                    maxLength: {
+                      value: 20,
+                      message: 'Roll number must be less than 20 characters',
+                    },
                   })}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="Enter your roll number"
@@ -142,35 +224,37 @@ const Signup = ({ onSignup }) => {
               )}
             </div>
 
-            {/* Department Field */}
+            {/* Trade Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Department</label>
+              <label className="text-sm font-medium text-gray-700">Trade *</label>
               <div className="relative">
-                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Book className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <select
-                  {...register('department', {
-                    required: 'Department is required',
+                  {...register('trade', {
+                    required: 'Trade is required',
                   })}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
                 >
-                  <option value="">Select Department</option>
-                  <option value="GCS">GCS</option>
-                  <option value="GME">GME</option>
-                  <option value="GEE">GEE</option>
-                  <option value="GEC">GEC</option>
-                  <option value="GFT">GFT</option>
-                  <option value="GCT">GCT</option>
-                  <option value="GIN">GIN</option>
+                  <option value="">Select Trade</option>
+                  <option value="Computer Science Engineering">Computer Science Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Electronics & Communication">Electronics & Communication</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                  <option value="Electrical Engineering">Electrical Engineering</option>
+                  <option value="Chemical Engineering">Chemical Engineering</option>
+                  <option value="Biotechnology">Biotechnology</option>
+                  <option value="TNP">TNP</option>
                 </select>
               </div>
-              {errors.department && (
-                <p className="text-red-500 text-sm">{errors.department.message}</p>
+              {errors.trade && (
+                <p className="text-red-500 text-sm">{errors.trade.message}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              <label className="text-sm font-medium text-gray-700">Password *</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -200,7 +284,7 @@ const Signup = ({ onSignup }) => {
 
             {/* Confirm Password Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+              <label className="text-sm font-medium text-gray-700">Confirm Password *</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -268,7 +352,7 @@ const Signup = ({ onSignup }) => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2025 RollCall All rights reserved.
+            © 2025 RollCall. All rights reserved.
           </p>
         </div>
       </motion.div>

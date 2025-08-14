@@ -1,290 +1,314 @@
-# QR-Based Attendance System
+# TNP Attendance Management System
 
-A modern, comprehensive attendance management system for college TNP departments, featuring QR code scanning, event management, and detailed reporting capabilities.
+A comprehensive attendance management system built with React frontend and Node.js backend, featuring QR code-based attendance tracking, user management, and detailed reporting.
 
-## 🚀 Features
+## Features
 
-### Core Functionality
-- **QR Code Generation**: Unique QR codes for each student
-- **QR Code Scanning**: Admin-only scanning interface with user verification
-- **Event Management**: Create and manage events and TNP meetings
-- **Attendance Tracking**: Real-time attendance marking and verification
-- **User Management**: Student and admin role-based access
-- **Database Storage**: SQLite database for users, events, and attendance records
+### Frontend (React + Vite)
+- **Modern UI**: Built with Tailwind CSS and Framer Motion
+- **Responsive Design**: Mobile-first approach
+- **Role-based Access**: Separate dashboards for admin and regular users
+- **QR Code Integration**: Generate and scan QR codes for attendance
+- **Real-time Updates**: Live attendance tracking and reporting
 
-### Advanced Features
-- **PDF Export**: Generate attendance reports in PDF format
-- **Filtering & Search**: Advanced filtering by date, trade, event type, and status
-- **Notice Board**: Display upcoming events and meetings
-- **Attendance History**: View individual student attendance records
-- **Responsive Design**: Mobile-friendly interface
-- **Real-time Updates**: Live attendance tracking and statistics
+### Backend (Node.js + Express + MongoDB)
+- **RESTful API**: Complete CRUD operations for all entities
+- **Authentication**: JWT-based secure authentication
+- **Role-based Authorization**: Admin and user role management
+- **Data Validation**: Input validation and sanitization
+- **QR Code Generation**: Dynamic QR code creation for events and users
 
-### User Roles
-- **Students**: View attendance history, upcoming events, and personal QR codes
-- **Admins**: Full system access including QR scanning, event creation, and report generation
-
-## 🛠️ Technology Stack
+## Tech Stack
 
 ### Frontend
-- **React 18** with Vite
-- **Tailwind CSS** for styling
-- **Framer Motion** for animations
-- **React Router DOM** for navigation
-- **React Hook Form** for form handling
-- **Lucide React** for icons
-- **React Hot Toast** for notifications
-- **QRCode.react** for QR code generation
+- React 19
+- Vite
+- Tailwind CSS
+- React Router DOM
+- Framer Motion
+- React Hook Form
+- React Hot Toast
+- QRCode.react
+- Lucide React
 
 ### Backend
-- **Node.js** with Express.js
-- **SQLite3** database
-- **QRCode** library for QR generation
-- **PDFKit** for PDF report generation
-- **CORS** enabled for cross-origin requests
+- Node.js
+- Express.js
+- MongoDB with Mongoose
+- JWT Authentication
+- bcryptjs for password hashing
+- QRCode generation
+- Express Validator
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ppp-attend/
-├── backend/
-│   ├── app.js                 # Main Express server
-│   └── package.json           # Backend dependencies
-├── ppp-client/
+├── backend/                 # Backend server
+│   ├── Models/             # MongoDB schemas
+│   ├── middleware/         # Auth and validation middleware
+│   ├── routes/             # API route handlers
+│   ├── database/           # Database connection
+│   ├── index.js            # Main server file
+│   └── package.json        # Backend dependencies
+├── ppp-client/             # Frontend React app
 │   ├── src/
-│   │   ├── pages/
-│   │   │   ├── LandingPage.jsx        # Modern landing page
-│   │   │   ├── Login.jsx              # User login
-│   │   │   ├── Signup.jsx             # User registration
-│   │   │   ├── AdminDashboard.jsx     # Admin dashboard
-│   │   │   ├── UserDashboard.jsx      # Student dashboard
-│   │   │   ├── QRScanner.jsx          # QR code scanner
-│   │   │   ├── CreateEvent.jsx        # Event creation
-│   │   │   ├── AttendanceSheet.jsx    # Attendance records
-│   │   │   ├── NoticePage.jsx         # Events and notices
-│   │   │   ├── AttendanceReport.jsx   # Admin reports
-│   │   │   └── LoadingPage.jsx        # Loading screen
-│   │   ├── App.jsx            # Main app component
-│   │   └── main.jsx           # App entry point
-│   └── package.json           # Frontend dependencies
-└── README.md                  # This file
+│   │   ├── pages/          # React components
+│   │   ├── services/       # API service layer
+│   │   └── assets/         # Static assets
+│   └── package.json        # Frontend dependencies
+└── README.md               # This file
 ```
 
-## 🗄️ Database Schema
+## Prerequisites
 
-### Users Table
-```sql
-CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  phone TEXT,
-  trade TEXT NOT NULL,
-  roll_no TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  role TEXT DEFAULT 'student',
-  qr_code TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+- Node.js (v18 or higher)
+- MongoDB (v5 or higher)
+- npm or yarn package manager
+
+## Installation & Setup
+
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd ppp-attend
 ```
 
-### Events Table
-```sql
-CREATE TABLE events (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  description TEXT,
-  event_type TEXT NOT NULL,
-  date DATE NOT NULL,
-  time TIME NOT NULL,
-  location TEXT,
-  max_attendees INTEGER,
-  target_trade TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+### 2. Backend Setup
+
+```bash
+cd backend
+
+# Install dependencies
+npm install
+
+# Create environment file
+cp env.example .env
+
+# Edit .env file with your configuration
+# MONGODB_URL=mongodb://localhost:27017/tnp_attendance
+# JWT_SECRET=your_secret_key_here
+# FRONTEND_URL=http://localhost:5173
+
+# Start the server
+npm run dev
 ```
 
-### Attendance Table
-```sql
-CREATE TABLE attendance (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER,
-  event_id INTEGER,
-  status TEXT DEFAULT 'present',
-  attendance_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-  verified_by INTEGER,
-  FOREIGN KEY (user_id) REFERENCES users (id),
-  FOREIGN KEY (event_id) REFERENCES events (id),
-  FOREIGN KEY (verified_by) REFERENCES users (id)
-);
+The backend will start on `http://localhost:5000`
+
+### 3. Frontend Setup
+
+```bash
+cd ppp-client
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
 ```
 
-## 🚀 Installation & Setup
+The frontend will start on `http://localhost:5173`
 
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
+## Environment Variables
 
-### Backend Setup
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+### Backend (.env)
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URL=mongodb://localhost:27017/tnp_attendance
+JWT_SECRET=your_super_secret_jwt_key_here
+FRONTEND_URL=http://localhost:5173
+LOG_LEVEL=info
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the server:
-   ```bash
-   npm start
-   # or for development
-   npm run dev
-   ```
-
-The backend will run on `http://localhost:5000`
-
-### Frontend Setup
-1. Navigate to the frontend directory:
-   ```bash
-   cd ppp-client
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install --legacy-peer-deps
-   # or
-   npm install --force
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-The frontend will run on `http://localhost:5173`
-
-## 📱 Usage Guide
-
-### For Students
-1. **Registration**: Sign up with your details (name, email, trade, roll number)
-2. **Login**: Access your personal dashboard
-3. **View QR Code**: Your unique QR code is displayed on your profile
-4. **Attendance History**: Check your attendance records for all events
-5. **Upcoming Events**: View scheduled events and meetings
-
-### For Admins
-1. **Login**: Access admin dashboard with admin credentials
-2. **Create Events**: Schedule new events or TNP meetings
-3. **Scan QR Codes**: Use the QR scanner to mark student attendance
-4. **Generate Reports**: Export attendance data as PDF
-5. **Manage Notices**: View and manage all events
-
-### QR Code Scanning Process
-1. Admin opens the QR scanner
-2. Student presents their QR code
-3. Admin scans the code using the scanner interface
-4. System displays student details for verification
-5. Admin selects the event/meeting from dropdown
-6. Admin confirms attendance marking
-7. System records the attendance with timestamp
-
-## 🔧 API Endpoints
+## API Endpoints
 
 ### Authentication
-- `POST /api/register` - User registration
-- `POST /api/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/profile` - Update user profile
+- `PUT /api/auth/change-password` - Change password
 
 ### Events
+- `POST /api/events` - Create event (admin only)
 - `GET /api/events` - Get all events
-- `POST /api/events` - Create new event
+- `GET /api/events/:id` - Get event by ID
+- `PUT /api/events/:id` - Update event (admin only)
+- `DELETE /api/events/:id` - Delete event (admin only)
 
 ### Attendance
-- `POST /api/scan-qr` - Scan QR code and get user details
-- `POST /api/mark-attendance` - Mark attendance for an event
-- `GET /api/attendance/:userId` - Get user attendance history
-- `GET /api/attendance-report` - Get attendance report (admin)
-- `GET /api/generate-pdf` - Generate PDF report
+- `POST /api/attendance/mark` - Mark attendance (admin only)
+- `GET /api/attendance/user/:userId` - Get user attendance
+- `GET /api/attendance/event/:eventId` - Get event attendance
+- `GET /api/attendance/report/overview` - Get attendance report
+- `GET /api/attendance/my-attendance` - Get current user's attendance
 
-### Users
-- `GET /api/users` - Get all users (admin)
-- `GET /api/profile/:userId` - Get user profile
-- `PUT /api/profile/:userId` - Update user profile
+### QR Codes
+- `GET /api/qr/generate/:userId` - Generate user QR code
+- `POST /api/qr/scan` - Scan QR code (admin only)
+- `GET /api/qr/user/:userId` - Get user's QR code
+- `GET /api/qr/event/:eventId` - Get event QR code
 
-## 🎨 Key Features in Detail
+### Users (Admin Only)
+- `GET /api/users` - Get all users
+- `GET /api/users/:userId` - Get user by ID
+- `PUT /api/users/:userId` - Update user
+- `DELETE /api/users/:userId` - Delete user
+- `GET /api/users/stats/overview` - Get user statistics
 
-### Modern Landing Page
-- Responsive design with gradient backgrounds
-- Feature showcase with animations
-- Statistics display
-- Call-to-action sections
-- Professional navigation
+## Usage
 
-### QR Scanner Interface
-- Camera simulation for QR scanning
-- User verification after scan
-- Event selection dropdown
-- Attendance confirmation
-- Success feedback
+### 1. Create Admin Account
+First, create an admin account using the registration endpoint:
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "password": "password123",
+    "role": "admin"
+  }'
+```
 
-### Attendance Reports
-- Comprehensive filtering options
-- Real-time statistics
-- PDF export functionality
-- Search and sort capabilities
-- Visual status indicators
+### 2. Create Regular Users
+Create student accounts:
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123",
+    "role": "user",
+    "trade": "Computer Science",
+    "roll_no": "CS001"
+  }'
+```
 
-### Notice Board
-- Event categorization (Events vs TNP Meetings)
-- Date-based filtering
-- Trade-specific targeting
-- Urgency indicators
-- Detailed event information
+### 3. Create Events
+As an admin, create events:
+```bash
+curl -X POST http://localhost:5000/api/events \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "title": "TNP Meeting",
+    "description": "Weekly TNP meeting",
+    "date": "2024-01-20",
+    "time": "10:00",
+    "location": "Auditorium",
+    "event_type": "TNP Meeting",
+    "department": "Computer Science"
+  }'
+```
 
-## 🔒 Security Features
+### 4. Mark Attendance
+Scan QR codes or manually mark attendance:
+```bash
+curl -X POST http://localhost:5000/api/attendance/mark \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "userId": "USER_ID",
+    "eventId": "EVENT_ID",
+    "status": "present"
+  }'
+```
 
+## Frontend Integration
+
+The frontend is already integrated with the backend through the API service layer. Key integration points:
+
+1. **Authentication**: Login/register forms connect to auth endpoints
+2. **Event Management**: Create, view, and manage events
+3. **QR Code Scanning**: Real-time attendance marking
+4. **Attendance Reports**: View and export attendance data
+5. **User Management**: Admin dashboard for user administration
+
+## Development
+
+### Backend Development
+```bash
+cd backend
+npm run dev  # Start with nodemon for auto-reload
+```
+
+### Frontend Development
+```bash
+cd ppp-client
+npm run dev  # Start Vite dev server
+```
+
+### Database
+- MongoDB connection is handled automatically
+- Models include proper indexing for performance
+- Soft delete implemented for data integrity
+
+## Production Deployment
+
+### Backend
+1. Set `NODE_ENV=production`
+2. Use strong JWT secret
+3. Configure MongoDB connection string
+4. Set up proper CORS origins
+5. Use PM2 or similar process manager
+
+### Frontend
+1. Build the project: `npm run build`
+2. Serve static files from a web server
+3. Update API base URL for production
+4. Configure environment variables
+
+## Security Features
+
+- JWT-based authentication
+- Password hashing with bcrypt
 - Role-based access control
-- QR code verification
-- Attendance timestamp tracking
-- Admin-only QR scanning
-- Secure password handling
-- Session management
+- Input validation and sanitization
+- CORS configuration
+- Secure HTTP headers
 
-## 📊 Reporting & Analytics
+## Troubleshooting
 
-- Attendance rate calculations
-- Trade-wise statistics
-- Event-specific reports
-- Date range filtering
-- Export capabilities
-- Visual data representation
+### Common Issues
 
-## 🎯 Future Enhancements
+1. **MongoDB Connection Error**
+   - Ensure MongoDB is running
+   - Check connection string in .env
+   - Verify database permissions
 
-- Real-time notifications
-- Email/SMS alerts
-- Advanced analytics dashboard
-- Mobile app development
-- Integration with college systems
-- Bulk import/export features
+2. **CORS Errors**
+   - Check FRONTEND_URL in backend .env
+   - Ensure frontend is running on correct port
 
-## 🤝 Contributing
+3. **JWT Token Issues**
+   - Verify JWT_SECRET is set
+   - Check token expiration
+   - Ensure Authorization header format
+
+4. **Port Conflicts**
+   - Backend: Change PORT in .env
+   - Frontend: Change port in package.json scripts
+
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License.
+This project is licensed under the ISC License.
 
-## 📞 Support
+## Support
 
-For support and questions, please contact the development team or create an issue in the repository.
-
----
-
-**Built with ❤️ for modern educational institutions**
+For support and questions:
+- Check the troubleshooting section
+- Review API documentation
+- Check console logs for errors
+- Verify environment configuration
