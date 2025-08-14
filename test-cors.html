@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test for TNP Attendance Backend</h1>
+    <button onclick="testCORS()">Test CORS Connection</button>
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <div id="result"></div>
+
+    <script>
+        async function testCORS() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing CORS...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/test-cors', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>CORS Test Result:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>CORS Test Failed:</h3>
+                    <p style="color: red;">${error.message}</p>
+                `;
+            }
+        }
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing Health Endpoint...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>Health Test Result:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Health Test Failed:</h3>
+                    <p style="color: red;">${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

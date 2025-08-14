@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Login Test for TNP Attendance Backend</h1>
+    
+    <div class="test-section info">
+        <h3>1. Test Backend Connection</h3>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>2. Test Login with Sample User</h3>
+        <div>
+            <label>Email:</label><br>
+            <input type="email" id="testEmail" placeholder="Enter email" value="test@example.com"><br>
+            <label>Password:</label><br>
+            <input type="password" id="testPassword" placeholder="Enter password" value="password123"><br>
+            <button onclick="testLogin()">Test Login</button>
+        </div>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>3. Test Invalid Login</h3>
+        <button onclick="testInvalidLogin()">Test Invalid Credentials</button>
+        <div id="invalid-login-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>4. Test Token Validation</h3>
+        <button onclick="testTokenValidation()">Test Token</button>
+        <div id="token-result"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = 'Testing connection...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/health', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Connection Successful</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Connection Failed</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            resultDiv.innerHTML = 'Testing login...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Login Successful</h4>
+                            <p><strong>User:</strong> ${data.user.name}</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                            <p><strong>Email:</strong> ${data.user.email}</p>
+                            <p><strong>Token:</strong> ${data.token.substring(0, 20)}...</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Login Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Login Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testInvalidLogin() {
+            const resultDiv = document.getElementById('invalid-login-result');
+            resultDiv.innerHTML = 'Testing invalid login...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'invalid@example.com', 
+                        password: 'wrongpassword' 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Invalid Login Handled Correctly</h4>
+                            <p>Status: ${response.status}</p>
+                            <p>Error: ${data.error}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Unexpected Response</h4>
+                            <p>Status: ${response.status}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Test Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testTokenValidation() {
+            const resultDiv = document.getElementById('token-result');
+            
+            if (!authToken) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ No Token Available</h4>
+                        <p>Please login first to get a token.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Testing token validation...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/profile', {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Token Valid</h4>
+                            <p><strong>User:</strong> ${data.user.name}</p>
+                            <p><strong>Email:</strong> ${data.user.email}</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Token Invalid</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Token Test Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

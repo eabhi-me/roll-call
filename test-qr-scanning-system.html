@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanning System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .qr-test { margin: 10px 0; padding: 10px; border-left: 4px solid #007bff; }
+        .step { margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>QR Scanning & Attendance Marking System Test</h1>
+    
+    <div class="test-section info">
+        <h3>1. Test Backend Connection</h3>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>2. Create Test Users</h3>
+        <div class="step">
+            <h4>Step 1: Create Admin User</h4>
+            <button onclick="createAdminUser()">Create Admin</button>
+            <div id="admin-creation-result"></div>
+        </div>
+        <div class="step">
+            <h4>Step 2: Create Student User</h4>
+            <button onclick="createStudentUser()">Create Student</button>
+            <div id="student-creation-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h3>3. Test QR Code Generation</h3>
+        <div class="step">
+            <h4>Generate QR Code for Student</h4>
+            <button onclick="generateQRCode()">Generate QR Code</button>
+            <div id="qr-generation-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h3>4. Test QR Code Scanning</h3>
+        <div class="step">
+            <h4>Scan QR Code (Admin Login Required)</h4>
+            <button onclick="loginAsAdmin()">Login as Admin</button>
+            <div id="admin-login-result"></div>
+        </div>
+        <div class="step">
+            <h4>Scan QR Code</h4>
+            <button onclick="scanQRCode()">Scan QR Code</button>
+            <div id="qr-scan-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h3>5. Test Event Creation</h3>
+        <div class="step">
+            <h4>Create Test Event</h4>
+            <button onclick="createTestEvent()">Create Event</button>
+            <div id="event-creation-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h3>6. Test Attendance Marking</h3>
+        <div class="step">
+            <h4>Mark Attendance</h4>
+            <button onclick="markAttendance()">Mark Attendance</button>
+            <div id="attendance-marking-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section warning">
+        <h3>7. Frontend Testing Instructions</h3>
+        <div class="step">
+            <h4>Complete Flow Test:</h4>
+            <ol>
+                <li><strong>Start Backend:</strong> <code>cd backend && npm run dev</code></li>
+                <li><strong>Start Frontend:</strong> <code>cd ppp-client && npm run dev</code></li>
+                <li><strong>Login as Admin:</strong> Use the admin credentials created above</li>
+                <li><strong>Go to QR Scanner:</strong> Navigate to <code>/scan</code></li>
+                <li><strong>Test QR Scanning:</strong> Use the "Test Scan" button or manual input</li>
+                <li><strong>Verify User:</strong> Check if user details are displayed correctly</li>
+                <li><strong>Mark Attendance:</strong> Select event and mark attendance</li>
+                <li><strong>Verify Success:</strong> Check if attendance is marked successfully</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = null;
+        let studentData = null;
+        let qrData = null;
+        let eventData = null;
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = 'Testing connection...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/health', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Connection Successful</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Connection Failed</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function createAdminUser() {
+            const resultDiv = document.getElementById('admin-creation-result');
+            resultDiv.innerHTML = 'Creating admin user...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Admin User',
+                        email: 'admin@test.com',
+                        password: 'admin123',
+                        role: 'admin',
+                        trade: 'TNP',
+                        roll_no: 'ADMIN001'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Admin User Created</h4>
+                            <p><strong>Email:</strong> admin@test.com</p>
+                            <p><strong>Password:</strong> admin123</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Admin Creation Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Creation Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function createStudentUser() {
+            const resultDiv = document.getElementById('student-creation-result');
+            resultDiv.innerHTML = 'Creating student user...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test Student',
+                        email: 'student@test.com',
+                        password: 'student123',
+                        role: 'user',
+                        trade: 'Computer Science',
+                        roll_no: '2024CS001'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    studentData = data.user;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Student User Created</h4>
+                            <p><strong>Name:</strong> ${data.user.name}</p>
+                            <p><strong>Email:</strong> ${data.user.email}</p>
+                            <p><strong>Roll No:</strong> ${data.user.roll_no}</p>
+                            <p><strong>Trade:</strong> ${data.user.trade}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Student Creation Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Creation Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function generateQRCode() {
+            const resultDiv = document.getElementById('qr-generation-result');
+            
+            if (!studentData) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ No Student Data</h4>
+                        <p>Please create a student user first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Generating QR code...';
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/qr/generate/${studentData.id}`, {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken || 'test-token'}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    qrData = data.qrCode.data;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ QR Code Generated</h4>
+                            <p><strong>QR Data:</strong></p>
+                            <pre>${JSON.stringify(qrData, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ QR Generation Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Generation Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loginAsAdmin() {
+            const resultDiv = document.getElementById('admin-login-result');
+            resultDiv.innerHTML = 'Logging in as admin...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    adminToken = data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Admin Login Successful</h4>
+                            <p><strong>Token:</strong> ${data.token.substring(0, 20)}...</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Admin Login Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Login Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function scanQRCode() {
+            const resultDiv = document.getElementById('qr-scan-result');
+            
+            if (!adminToken) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ No Admin Token</h4>
+                        <p>Please login as admin first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (!qrData) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ No QR Data</h4>
+                        <p>Please generate a QR code first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Scanning QR code...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/qr/scan', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ qrData: JSON.stringify(qrData) })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ QR Code Scanned Successfully</h4>
+                            <p><strong>User:</strong> ${data.user.name}</p>
+                            <p><strong>Roll No:</strong> ${data.user.roll_no}</p>
+                            <p><strong>Trade:</strong> ${data.user.trade}</p>
+                            <p><strong>Events Available:</strong> ${data.events ? data.events.length : 0}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ QR Scan Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Scan Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function createTestEvent() {
+            const resultDiv = document.getElementById('event-creation-result');
+            
+            if (!adminToken) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ No Admin Token</h4>
+                        <p>Please login as admin first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Creating test event...';
+            
+            try {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const response = await fetch('http://localhost:5000/api/events', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Event',
+                        description: 'A test event for QR scanning',
+                        event_type: 'Event',
+                        date: tomorrow.toISOString().split('T')[0],
+                        time: '10:00',
+                        location: 'Main Hall',
+                        target_trade: 'Computer Science',
+                        max_attendees: 50
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    eventData = data.event;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Test Event Created</h4>
+                            <p><strong>Title:</strong> ${data.event.title}</p>
+                            <p><strong>Date:</strong> ${data.event.date}</p>
+                            <p><strong>Time:</strong> ${data.event.time}</p>
+                            <p><strong>Location:</strong> ${data.event.location}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Event Creation Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Creation Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function markAttendance() {
+            const resultDiv = document.getElementById('attendance-marking-result');
+            
+            if (!adminToken || !studentData || !eventData) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Missing Data</h4>
+                        <p>Please ensure admin is logged in, student is created, and event is created.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Marking attendance...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/attendance/mark', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        userId: studentData.id,
+                        eventId: eventData._id,
+                        status: 'present',
+                        verifiedBy: 'admin'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Attendance Marked Successfully</h4>
+                            <p><strong>Student:</strong> ${studentData.name}</p>
+                            <p><strong>Event:</strong> ${eventData.title}</p>
+                            <p><strong>Status:</strong> Present</p>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Attendance Marking Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Marking Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

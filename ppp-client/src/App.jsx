@@ -9,6 +9,7 @@ import UserDashboard from './pages/UserDashboard';
 import AttendanceSheet from './pages/AttendanceSheet';
 import CreateEvent from './pages/CreateEvent';
 import QRScanner from './pages/QRScanner';
+import MarkAttendance from './pages/MarkAttendance';
 import NoticePage from './pages/NoticePage';
 import AttendanceReport from './pages/AttendanceReport';
 import Profile from './pages/Profile';
@@ -23,20 +24,37 @@ function App() {
   useEffect(() => {
     // Check if user is logged in from localStorage
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const token = localStorage.getItem('token');
+    
+    if (savedUser && token) {
+      try {
+        const userData = JSON.parse(savedUser);
+        console.log('App: User data loaded from localStorage:', userData);
+        console.log('App: User role:', userData.role);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+    } else {
+      console.log('App: No user data found in localStorage');
     }
     setLoading(false);
   }, []);
 
   const login = (userData) => {
+    console.log('App: Login function called with user data:', userData);
+    console.log('App: User role for login:', userData.role);
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    // User data and token are already stored in localStorage by Login/Signup components
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   if (loading) {
@@ -85,27 +103,69 @@ function App() {
           {/* Protected Routes */}
           <Route 
             path="/admin" 
-            element={user && user.role === 'admin' ? <AdminDashboard user={user} onLogout={logout} /> : <Navigate to="/login" />} 
+            element={
+              user && user.role === 'admin' ? 
+                <AdminDashboard user={user} onLogout={logout} /> : 
+                user ? 
+                  <Navigate to="/dashboard" /> : 
+                  <Navigate to="/login" />
+            } 
           />
           <Route 
             path="/dashboard" 
-            element={user && user.role === 'user' ? <UserDashboard user={user} onLogout={logout} /> : <Navigate to="/login" />} 
+            element={
+              user ? 
+                <UserDashboard user={user} onLogout={logout} /> : 
+                <Navigate to="/login" />
+            } 
           />
           <Route 
             path="/attendance/:eventId" 
-            element={user ? <AttendanceSheet user={user} onLogout={logout} /> : <Navigate to="/login" />} 
+            element={
+              user ? 
+                <AttendanceSheet user={user} onLogout={logout} /> : 
+                <Navigate to="/login" />
+            } 
           />
           <Route 
             path="/create-event" 
-            element={user && user.role === 'admin' ? <CreateEvent user={user} onLogout={logout} /> : <Navigate to="/login" />} 
+            element={
+              user && user.role === 'admin' ? 
+                <CreateEvent user={user} onLogout={logout} /> : 
+                user ? 
+                  <Navigate to="/dashboard" /> : 
+                  <Navigate to="/login" />
+            } 
           />
           <Route 
             path="/scan" 
-            element={user && user.role === 'admin' ? <QRScanner /> : <Navigate to="/login" />} 
+            element={
+              user && user.role === 'admin' ? 
+                <QRScanner /> : 
+                user ? 
+                  <Navigate to="/dashboard" /> : 
+                  <Navigate to="/login" />
+            } 
+          />
+          <Route 
+            path="/mark-attendance" 
+            element={
+              user && user.role === 'admin' ? 
+                <MarkAttendance /> : 
+                user ? 
+                  <Navigate to="/dashboard" /> : 
+                  <Navigate to="/login" />
+            } 
           />
           <Route 
             path="/attendance-report" 
-            element={user && user.role === 'admin' ? <AttendanceReport /> : <Navigate to="/login" />} 
+            element={
+              user && user.role === 'admin' ? 
+                <AttendanceReport /> : 
+                user ? 
+                  <Navigate to="/dashboard" /> : 
+                  <Navigate to="/login" />
+            } 
           />
           <Route 
             path="/profile" 

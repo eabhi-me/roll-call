@@ -18,83 +18,72 @@ import {
   Eye
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { eventsAPI, attendanceAPI } from '../services/api';
 
 const AttendanceSheet = ({ user, onLogout }) => {
   const { eventId } = useParams();
   const [event, setEvent] = useState({
     id: eventId,
-    title: "Campus Recruitment Drive",
-    date: "2024-01-15",
-    time: "10:00 AM - 2:00 PM",
-    location: "Main Auditorium",
-    totalStudents: 120,
-    presentCount: 89,
-    absentCount: 31,
-    attendanceRate: 74.2
+    title: "",
+    date: "",
+    time: "",
+    location: "",
+    totalStudents: 0,
+    presentCount: 0,
+    absentCount: 0,
+    attendanceRate: 0
   });
 
-  const [attendanceRecords, setAttendanceRecords] = useState([
-    {
-      id: 1,
-      studentName: "Rahul Kumar",
-      studentId: "STU001",
-      department: "Computer Science",
-      email: "rahul.kumar@college.edu",
-      phone: "9876543210",
-      status: "present",
-      attendanceTime: "10:15 AM",
-      qrScanned: true
-    },
-    {
-      id: 2,
-      studentName: "Priya Sharma",
-      studentId: "STU002",
-      department: "Information Technology",
-      email: "priya.sharma@college.edu",
-      phone: "9876543211",
-      status: "present",
-      attendanceTime: "10:12 AM",
-      qrScanned: true
-    },
-    {
-      id: 3,
-      studentName: "Amit Patel",
-      studentId: "STU003",
-      department: "Electronics",
-      email: "amit.patel@college.edu",
-      phone: "9876543212",
-      status: "absent",
-      attendanceTime: null,
-      qrScanned: false
-    },
-    {
-      id: 4,
-      studentName: "Neha Singh",
-      studentId: "STU004",
-      department: "Computer Science",
-      email: "neha.singh@college.edu",
-      phone: "9876543213",
-      status: "present",
-      attendanceTime: "10:20 AM",
-      qrScanned: true
-    },
-    {
-      id: 5,
-      studentName: "Vikram Malhotra",
-      studentId: "STU005",
-      department: "Mechanical",
-      email: "vikram.malhotra@college.edu",
-      phone: "9876543214",
-      status: "present",
-      attendanceTime: "10:08 AM",
-      qrScanned: true
-    }
-  ]);
-
-  const [filteredRecords, setFilteredRecords] = useState(attendanceRecords);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [filteredRecords, setFilteredRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [tradeFilter, setTradeFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (eventId) {
+      fetchEventData();
+    }
+  }, [eventId]);
+
+  const fetchEventData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch event details
+      const eventResponse = await eventsAPI.getEvent(eventId);
+      if (eventResponse.success) {
+        setEvent(eventResponse.event);
+      }
+
+      // Fetch attendance records for this event
+      const attendanceResponse = await attendanceAPI.getEventAttendance(eventId);
+      if (attendanceResponse.success) {
+        setAttendanceRecords(attendanceResponse.attendance);
+        setFilteredRecords(attendanceResponse.attendance);
+        
+        // Update event stats
+        const presentCount = attendanceResponse.attendance.filter(a => a.status === 'present').length;
+        const absentCount = attendanceResponse.attendance.filter(a => a.status === 'absent').length;
+        const totalStudents = attendanceResponse.attendance.length;
+        const attendanceRate = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0;
+        
+        setEvent(prev => ({
+          ...prev,
+          presentCount,
+          absentCount,
+          totalStudents,
+          attendanceRate
+        }));
+      }
+    } catch (error) {
+      console.error('Fetch event data error:', error);
+      toast.error('Failed to fetch event data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = attendanceRecords;
@@ -114,12 +103,12 @@ const AttendanceSheet = ({ user, onLogout }) => {
     }
 
     // Department filter
-    if (departmentFilter !== 'all') {
-      filtered = filtered.filter(record => record.department === departmentFilter);
+    if (tradeFilter !== 'all') {
+      filtered = filtered.filter(record => record.department === tradeFilter);
     }
 
     setFilteredRecords(filtered);
-  }, [searchTerm, statusFilter, departmentFilter, attendanceRecords]);
+  }, [searchTerm, statusFilter, tradeFilter, attendanceRecords]);
 
   const handleExport = () => {
     // Simulate export functionality
@@ -131,9 +120,19 @@ const AttendanceSheet = ({ user, onLogout }) => {
     toast.success('Logged out successfully');
   };
 
-  const getDepartments = () => {
+  const getTrades = () => {
     return [...new Set(attendanceRecords.map(record => record.department))];
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Loading event and attendance data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -277,16 +276,17 @@ const AttendanceSheet = ({ user, onLogout }) => {
               </select>
             </div>
 
-            {/* Department Filter */}
+            {/* Trade Filter */}
             <div className="md:w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Trade</label>
               <select
-                value={departmentFilter}
-                onChange={(e) => setDepartmentFilter(e.target.value)}
+                value={tradeFilter}
+                onChange={(e) => setTradeFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
-                <option value="all">All Departments</option>
-                {getDepartments().map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
+                <option value="all">All Trades</option>
+                {getTrades().map(trade => (
+                  <option key={trade} value={trade}>{trade}</option>
                 ))}
               </select>
             </div>
@@ -314,7 +314,7 @@ const AttendanceSheet = ({ user, onLogout }) => {
                     Student
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Department
+                    Trade
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status

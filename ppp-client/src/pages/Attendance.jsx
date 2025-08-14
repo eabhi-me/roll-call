@@ -18,89 +18,22 @@ import {
   Target
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { attendanceAPI } from '../services/api';
 
 const Attendance = ({ user, onLogout }) => {
-  const [attendanceHistory, setAttendanceHistory] = useState([
-    {
-      id: 1,
-      eventName: "Campus Recruitment Drive",
-      eventType: "Event",
-      date: "2024-01-15",
-      time: "10:00 AM",
-      location: "Main Auditorium",
-      status: "present",
-      arrivalTime: "10:05 AM",
-      trade: "Computer Science Engineering"
-    },
-    {
-      id: 2,
-      eventName: "Industry Expert Talk",
-      eventType: "Event",
-      date: "2024-01-14",
-      time: "2:00 PM",
-      location: "Room 101",
-      status: "present",
-      arrivalTime: "1:58 PM",
-      trade: "Information Technology"
-    },
-    {
-      id: 3,
-      eventName: "Mock Interview Session",
-      eventType: "TNP Meeting",
-      date: "2024-01-13",
-      time: "11:00 AM",
-      location: "Interview Room",
-      status: "absent",
-      arrivalTime: null,
-      trade: "Electronics & Communication"
-    },
-    {
-      id: 4,
-      eventName: "Resume Building Workshop",
-      eventType: "Event",
-      date: "2024-01-12",
-      time: "3:00 PM",
-      location: "Computer Lab",
-      status: "present",
-      arrivalTime: "3:02 PM",
-      trade: "Mechanical Engineering"
-    },
-    {
-      id: 5,
-      eventName: "Career Guidance Session",
-      eventType: "TNP Meeting",
-      date: "2024-01-11",
-      time: "10:00 AM",
-      location: "Conference Hall",
-      status: "present",
-      arrivalTime: "9:58 AM",
-      trade: "Civil Engineering"
-    },
-    {
-      id: 6,
-      eventName: "Technical Interview Prep",
-      eventType: "Event",
-      date: "2024-01-10",
-      time: "11:00 AM",
-      location: "Lab 2",
-      status: "absent",
-      arrivalTime: null,
-      trade: "Electrical Engineering"
-    }
-  ]);
-
-  const [filteredHistory, setFilteredHistory] = useState(attendanceHistory);
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
+  const [filteredHistory, setFilteredHistory] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [eventTypeFilter, setEventTypeFilter] = useState('all');
   const [dateRangeFilter, setDateRangeFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   const [stats, setStats] = useState({
-    totalEvents: 15,
-    attended: 12,
-    absent: 3,
-    attendanceRate: 80,
-    averageArrivalTime: "2 minutes early"
+    totalEvents: 0,
+    attended: 0,
+    absent: 0,
+    attendanceRate: 0
   });
 
   const eventTypes = ['All Types', 'Event', 'TNP Meeting'];
@@ -108,8 +41,40 @@ const Attendance = ({ user, onLogout }) => {
   const dateRanges = ['All Time', 'This Week', 'This Month', 'Last 3 Months'];
 
   useEffect(() => {
-    filterHistory();
-  }, [searchTerm, statusFilter, eventTypeFilter, dateRangeFilter, attendanceHistory]);
+    fetchAttendanceHistory();
+  }, []);
+
+  const fetchAttendanceHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await attendanceAPI.getUserAttendanceHistory(user.id);
+      
+      if (response.success) {
+        setAttendanceHistory(response.attendance);
+        setFilteredHistory(response.attendance);
+        
+        // Calculate stats
+        const totalEvents = response.attendance.length;
+        const attended = response.attendance.filter(a => a.status === 'present').length;
+        const absent = response.attendance.filter(a => a.status === 'absent').length;
+        const attendanceRate = totalEvents > 0 ? Math.round((attended / totalEvents) * 100) : 0;
+        
+        setStats({
+          totalEvents,
+          attended,
+          absent,
+          attendanceRate
+        });
+      } else {
+        toast.error('Failed to fetch attendance history');
+      }
+    } catch (error) {
+      console.error('Fetch attendance history error:', error);
+      toast.error('Failed to fetch attendance history');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filterHistory = () => {
     let filtered = attendanceHistory;

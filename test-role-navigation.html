@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Navigation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .role-test { margin: 10px 0; padding: 10px; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Role-Based Navigation Test for TNP Attendance</h1>
+    
+    <div class="test-section info">
+        <h3>1. Test Backend Connection</h3>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>2. Test User Registration (Regular User)</h3>
+        <div>
+            <label>Name:</label><br>
+            <input type="text" id="userName" placeholder="Enter name" value="Test User"><br>
+            <label>Email:</label><br>
+            <input type="email" id="userEmail" placeholder="Enter email" value="user@test.com"><br>
+            <label>Password:</label><br>
+            <input type="password" id="userPassword" placeholder="Enter password" value="password123"><br>
+            <label>Roll Number:</label><br>
+            <input type="text" id="userRollNo" placeholder="Enter roll number" value="2024001"><br>
+            <label>Trade:</label><br>
+            <select id="userTrade">
+                <option value="Computer Science">Computer Science</option>
+                <option value="Mechanical">Mechanical</option>
+                <option value="Electrical">Electrical</option>
+                <option value="Civil">Civil</option>
+                <option value="TNP">TNP</option>
+            </select><br>
+            <button onclick="testUserRegistration()">Register User</button>
+        </div>
+        <div id="user-registration-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>3. Test Admin Registration</h3>
+        <div>
+            <label>Name:</label><br>
+            <input type="text" id="adminName" placeholder="Enter name" value="Admin User"><br>
+            <label>Email:</label><br>
+            <input type="email" id="adminEmail" placeholder="Enter email" value="admin@test.com"><br>
+            <label>Password:</label><br>
+            <input type="password" id="adminPassword" placeholder="Enter password" value="admin123"><br>
+            <label>Roll Number:</label><br>
+            <input type="text" id="adminRollNo" placeholder="Enter roll number" value="ADMIN001"><br>
+            <label>Trade:</label><br>
+            <select id="adminTrade">
+                <option value="TNP">TNP</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Mechanical">Mechanical</option>
+                <option value="Electrical">Electrical</option>
+                <option value="Civil">Civil</option>
+            </select><br>
+            <button onclick="testAdminRegistration()">Register Admin</button>
+        </div>
+        <div id="admin-registration-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>4. Test Role-Based Login</h3>
+        <div class="role-test">
+            <h4>Test User Login</h4>
+            <button onclick="testUserLogin()">Login as User</button>
+            <div id="user-login-result"></div>
+        </div>
+        <div class="role-test">
+            <h4>Test Admin Login</h4>
+            <button onclick="testAdminLogin()">Login as Admin</button>
+            <div id="admin-login-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h3>5. Test Role-Based Route Access</h3>
+        <div class="role-test">
+            <h4>Test Admin Routes (should work for admin)</h4>
+            <button onclick="testAdminRoutes()">Test Admin Routes</button>
+            <div id="admin-routes-result"></div>
+        </div>
+        <div class="role-test">
+            <h4>Test User Routes (should work for both)</h4>
+            <button onclick="testUserRoutes()">Test User Routes</button>
+            <div id="user-routes-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section warning">
+        <h3>6. Navigation Instructions</h3>
+        <p><strong>After successful login:</strong></p>
+        <ul>
+            <li><strong>Admin users</strong> should be redirected to <code>/admin</code></li>
+            <li><strong>Regular users</strong> should be redirected to <code>/dashboard</code></li>
+            <li>If an admin tries to access <code>/dashboard</code>, they should be allowed</li>
+            <li>If a user tries to access <code>/admin</code>, they should be redirected to <code>/dashboard</code></li>
+        </ul>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentToken = null;
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = 'Testing connection...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/health', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Connection Successful</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Connection Failed</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testUserRegistration() {
+            const resultDiv = document.getElementById('user-registration-result');
+            const userData = {
+                name: document.getElementById('userName').value,
+                email: document.getElementById('userEmail').value,
+                password: document.getElementById('userPassword').value,
+                roll_no: document.getElementById('userRollNo').value,
+                trade: document.getElementById('userTrade').value,
+                role: 'user'
+            };
+            
+            resultDiv.innerHTML = 'Registering user...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ User Registration Successful</h4>
+                            <p><strong>Name:</strong> ${data.user.name}</p>
+                            <p><strong>Email:</strong> ${data.user.email}</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                            <p><strong>Trade:</strong> ${data.user.trade}</p>
+                            <p><strong>Roll No:</strong> ${data.user.roll_no}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ User Registration Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Registration Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testAdminRegistration() {
+            const resultDiv = document.getElementById('admin-registration-result');
+            const adminData = {
+                name: document.getElementById('adminName').value,
+                email: document.getElementById('adminEmail').value,
+                password: document.getElementById('adminPassword').value,
+                roll_no: document.getElementById('adminRollNo').value,
+                trade: document.getElementById('adminTrade').value,
+                role: 'admin'
+            };
+            
+            resultDiv.innerHTML = 'Registering admin...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(adminData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Admin Registration Successful</h4>
+                            <p><strong>Name:</strong> ${data.user.name}</p>
+                            <p><strong>Email:</strong> ${data.user.email}</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                            <p><strong>Trade:</strong> ${data.user.trade}</p>
+                            <p><strong>Roll No:</strong> ${data.user.roll_no}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Admin Registration Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Registration Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testUserLogin() {
+            const resultDiv = document.getElementById('user-login-result');
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            
+            resultDiv.innerHTML = 'Logging in as user...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user && data.user.role === 'user') {
+                    currentUser = data.user;
+                    currentToken = data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ User Login Successful</h4>
+                            <p><strong>Name:</strong> ${data.user.name}</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                            <p><strong>Expected Navigation:</strong> /dashboard</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ User Login Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Login Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testAdminLogin() {
+            const resultDiv = document.getElementById('admin-login-result');
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            resultDiv.innerHTML = 'Logging in as admin...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user && data.user.role === 'admin') {
+                    currentUser = data.user;
+                    currentToken = data.token;
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Admin Login Successful</h4>
+                            <p><strong>Name:</strong> ${data.user.name}</p>
+                            <p><strong>Role:</strong> ${data.user.role}</p>
+                            <p><strong>Expected Navigation:</strong> /admin</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Admin Login Failed</h4>
+                            <p>${data.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Login Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testAdminRoutes() {
+            const resultDiv = document.getElementById('admin-routes-result');
+            
+            if (!currentUser || currentUser.role !== 'admin') {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ No Admin User Logged In</h4>
+                        <p>Please login as admin first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Testing admin routes...';
+            
+            const adminRoutes = [
+                '/api/auth/profile',
+                '/api/users',
+                '/api/events',
+                '/api/attendance/report'
+            ];
+            
+            let results = [];
+            
+            for (const route of adminRoutes) {
+                try {
+                    const response = await fetch(`http://localhost:5000${route}`, {
+                        method: 'GET',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${currentToken}`
+                        }
+                    });
+                    
+                    results.push({
+                        route,
+                        status: response.status,
+                        success: response.ok
+                    });
+                } catch (error) {
+                    results.push({
+                        route,
+                        status: 'ERROR',
+                        success: false,
+                        error: error.message
+                    });
+                }
+            }
+            
+            const successCount = results.filter(r => r.success).length;
+            const totalCount = results.length;
+            
+            resultDiv.innerHTML = `
+                <div class="${successCount === totalCount ? 'success' : 'warning'}">
+                    <h4>${successCount === totalCount ? '✅' : '⚠️'} Admin Routes Test</h4>
+                    <p><strong>Success Rate:</strong> ${successCount}/${totalCount}</p>
+                    <pre>${JSON.stringify(results, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        async function testUserRoutes() {
+            const resultDiv = document.getElementById('user-routes-result');
+            
+            if (!currentUser) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ No User Logged In</h4>
+                        <p>Please login first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Testing user routes...';
+            
+            const userRoutes = [
+                '/api/auth/profile',
+                '/api/attendance/history',
+                '/api/events/upcoming'
+            ];
+            
+            let results = [];
+            
+            for (const route of userRoutes) {
+                try {
+                    const response = await fetch(`http://localhost:5000${route}`, {
+                        method: 'GET',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${currentToken}`
+                        }
+                    });
+                    
+                    results.push({
+                        route,
+                        status: response.status,
+                        success: response.ok
+                    });
+                } catch (error) {
+                    results.push({
+                        route,
+                        status: 'ERROR',
+                        success: false,
+                        error: error.message
+                    });
+                }
+            }
+            
+            const successCount = results.filter(r => r.success).length;
+            const totalCount = results.length;
+            
+            resultDiv.innerHTML = `
+                <div class="${successCount === totalCount ? 'success' : 'warning'}">
+                    <h4>${successCount === totalCount ? '✅' : '⚠️'} User Routes Test</h4>
+                    <p><strong>Success Rate:</strong> ${successCount}/${totalCount}</p>
+                    <p><strong>Current User Role:</strong> ${currentUser.role}</p>
+                    <pre>${JSON.stringify(results, null, 2)}</pre>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

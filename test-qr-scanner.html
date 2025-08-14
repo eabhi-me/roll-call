@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .qr-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .qr-code {
+            display: inline-block;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Scanner Test Page</h1>
+        
+        <div class="instructions">
+            <h3>How to Test QR Scanner:</h3>
+            <ol>
+                <li>Open the QR Scanner page in your app</li>
+                <li>Click "Start Camera"</li>
+                <li>Use one of the test QR codes below to scan</li>
+                <li>Or use the "Test Scan" button for simulation</li>
+            </ol>
+        </div>
+
+        <div class="qr-section">
+            <h3>Test QR Code Data</h3>
+            <p>Copy these JSON strings and generate QR codes using any online QR generator:</p>
+            
+            <div class="qr-code">
+                {"userId":"507f1f77bcf86cd799439011","rollNo":"2024CS001","name":"John Doe","trade":"Computer Science","timestamp":1703123456789,"type":"user_attendance"}
+            </div>
+            
+            <div class="qr-code">
+                {"userId":"507f1f77bcf86cd799439012","rollNo":"2024CS002","name":"Jane Smith","trade":"Computer Science","timestamp":1703123456790,"type":"user_attendance"}
+            </div>
+            
+            <div class="qr-code">
+                {"userId":"507f1f77bcf86cd799439013","rollNo":"2024ME001","name":"Bob Johnson","trade":"Mechanical Engineering","timestamp":1703123456791,"type":"user_attendance"}
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <h3>Quick Test Links</h3>
+            <p>Use these links to quickly test the scanner:</p>
+            
+            <button class="test-button" onclick="window.open('http://localhost:5173/qr-scanner', '_blank')">
+                Open QR Scanner
+            </button>
+            
+            <button class="test-button" onclick="window.open('http://localhost:5173/admin', '_blank')">
+                Open Admin Dashboard
+            </button>
+            
+            <button class="test-button" onclick="window.open('http://localhost:5173/dashboard', '_blank')">
+                Open User Dashboard
+            </button>
+        </div>
+
+        <div class="qr-section">
+            <h3>Online QR Generators</h3>
+            <p>Use these websites to generate QR codes from the test data:</p>
+            
+            <a href="https://www.qr-code-generator.com/" target="_blank" class="test-button">
+                QR Code Generator
+            </a>
+            
+            <a href="https://www.qrcode-monkey.com/" target="_blank" class="test-button">
+                QR Code Monkey
+            </a>
+            
+            <a href="https://www.the-qrcode-generator.com/" target="_blank" class="test-button">
+                The QR Code Generator
+            </a>
+        </div>
+
+        <div class="qr-section">
+            <h3>Troubleshooting</h3>
+            <ul>
+                <li><strong>Camera not working:</strong> Make sure you're using HTTPS or localhost, and allow camera permissions</li>
+                <li><strong>QR not detected:</strong> Ensure good lighting and hold the QR code steady</li>
+                <li><strong>Backend errors:</strong> Make sure the backend server is running on port 5000</li>
+                <li><strong>Authentication errors:</strong> Make sure you're logged in as an admin user</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "ppp-attendance-system",
+  "version": "1.0.0",
+  "description": "TNP Attendance System with QR Code scanning and management",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd ppp-client && npm run dev",
+    "install-all": "npm install && cd backend && npm install && cd ../ppp-client && npm install",
+    "build": "cd ppp-client && npm run build",
+    "start": "cd backend && npm start"
+  },
+  "keywords": [
+    "attendance",
+    "qr-code",
+    "tnp",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
+  "author": "TNP Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

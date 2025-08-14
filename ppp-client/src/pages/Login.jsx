@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, GraduationCap } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 const Login = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState('user');
 
   const {
     register,
@@ -19,23 +19,86 @@ const Login = ({ onLogin }) => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock authentication - in real app, this would be an API call
-      const userData = {
-        id: Date.now(),
-        email: data.email,
-        name: data.email.split('@')[0], // Mock name from email
-        role: role,
-        department: 'TNP',
-        studentId: role === 'user' ? `STU${Date.now()}` : null,
-      };
+      // Test backend connection first
+      try {
+        const testResponse = await fetch('http://localhost:5000/api/test-cors', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!testResponse.ok) {
+          console.error('Backend connection test failed:', testResponse.status);
+          toast.error('Cannot connect to server. Please check if the backend is running.');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Backend connection test successful');
+      } catch (testError) {
+        console.error('Backend connection test error:', testError);
+        toast.error('Cannot connect to server. Please check if the backend is running on port 5000.');
+        setLoading(false);
+        return;
+      }
 
-      onLogin(userData);
-      toast.success(`Welcome back, ${userData.name}!`);
+      console.log('Attempting login with email:', data.email);
+
+      // Make API call to backend
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email.trim().toLowerCase(),
+          password: data.password,
+        }),
+      });
+
+      console.log('Login response status:', response.status);
+      const result = await response.json();
+      console.log('Login response:', { ...result, user: result.user ? 'User data received' : 'No user data' });
+
+      if (response.ok && result.message && result.user && result.token) {
+        // Store token in localStorage
+        localStorage.setItem('token', result.token);
+        
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        // Call the onLogin callback to update parent state
+        onLogin(result.user);
+        
+        // Show success message
+        toast.success(`Welcome back, ${result.user.name}!`);
+        
+        // Debug: Log user role for navigation
+        console.log('User role for navigation:', result.user.role);
+        console.log('User data:', result.user);
+        
+        // Navigate to appropriate dashboard based on role
+        if (result.user.role === 'admin') {
+          console.log('Navigating to admin dashboard');
+          navigate('/admin');
+        } else if (result.user.role === 'user') {
+          console.log('Navigating to user dashboard');
+          navigate('/dashboard');
+        } else {
+          console.error('Unknown user role:', result.user.role);
+          toast.error('Invalid user role. Please contact administrator.');
+          // Default to user dashboard for unknown roles
+          navigate('/dashboard');
+        }
+      } else {
+        // Handle backend validation errors
+        const errorMessage = result.error || 'Login failed. Please check your credentials and try again.';
+        toast.error(errorMessage);
+      }
     } catch (error) {
-      toast.error('Login failed. Please try again.');
+      console.error('Login error:', error);
+      toast.error('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
