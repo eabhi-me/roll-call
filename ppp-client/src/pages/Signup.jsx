@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, GraduationCap, Phone, Building } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, GraduationCap, Book, Building } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
@@ -20,7 +20,7 @@ const Signup = ({ onSignup }) => {
 
   const password = watch('password');
 
-  const onSubmit = async (data) => {
+  const handleSignup = async (data) => {
     setLoading(true);
     try {
       // Simulate API call
@@ -31,10 +31,9 @@ const Signup = ({ onSignup }) => {
         id: Date.now(),
         email: data.email,
         name: data.name,
-        phone: data.phone,
         department: data.department,
         role: role,
-        studentId: role === 'user' ? `STU${Date.now()}` : null,
+        studentId: role === 'user' ? `${data.roll_no}` : null,
       };
 
       onSignup(userData);
@@ -75,37 +74,8 @@ const Signup = ({ onSignup }) => {
           transition={{ delay: 0.3 }}
           className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
         >
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Role Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Register as</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole('user')}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    role === 'user'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <User className="w-5 h-5 mx-auto mb-1" />
-                  <span className="text-sm font-medium">Student</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('admin')}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    role === 'admin'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <GraduationCap className="w-5 h-5 mx-auto mb-1" />
-                  <span className="text-sm font-medium">Admin</span>
-                </button>
-              </div>
-            </div>
+          <form onSubmit={handleSignup} className="space-y-6">
+          
 
             {/* Name Field */}
             <div className="space-y-2">
@@ -153,26 +123,22 @@ const Signup = ({ onSignup }) => {
               )}
             </div>
 
-            {/* Phone Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Phone Number</label>
+            {/* RollNo Field */}
+            <div className="space-y-2">Roll No.
+              <label className="text-sm font-medium text-gray-700"></label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Book className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
-                  type="tel"
-                  {...register('phone', {
-                    required: 'Phone number is required',
-                    pattern: {
-                      value: /^[0-9]{10}$/,
-                      message: 'Please enter a valid 10-digit phone number',
-                    },
+                  type="alphaNum"
+                  {...register('roll_no', {
+                    required: 'Roll number is required',
                   })}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  placeholder="Enter your phone number"
+                  placeholder="Enter your roll number"
                 />
               </div>
-              {errors.phone && (
-                <p className="text-red-500 text-sm">{errors.phone.message}</p>
+              {errors.roll_no && (
+                <p className="text-red-500 text-sm">{errors.roll_no.message}</p>
               )}
             </div>
 
@@ -188,13 +154,13 @@ const Signup = ({ onSignup }) => {
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
                 >
                   <option value="">Select Department</option>
-                  <option value="Computer Science">Computer Science</option>
-                  <option value="Information Technology">Information Technology</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Mechanical">Mechanical</option>
-                  <option value="Civil">Civil</option>
-                  <option value="Chemical">Chemical</option>
-                  <option value="TNP">TNP</option>
+                  <option value="GCS">GCS</option>
+                  <option value="GME">GME</option>
+                  <option value="GEE">GEE</option>
+                  <option value="GEC">GEC</option>
+                  <option value="GFT">GFT</option>
+                  <option value="GCT">GCT</option>
+                  <option value="GIN">GIN</option>
                 </select>
               </div>
               {errors.department && (
@@ -302,7 +268,7 @@ const Signup = ({ onSignup }) => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2024 TNP Department. All rights reserved.
+            © 2025 RollCall All rights reserved.
           </p>
         </div>
       </motion.div>

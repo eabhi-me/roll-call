@@ -164,7 +164,7 @@ const QRScanner = () => {
           </button>
           
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            QR Code Scanner
+            QR Scanner
           </h1>
           
           <div className="w-20"></div>
@@ -279,21 +279,9 @@ const QRScanner = () => {
                       </div>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                      <div className="p-3 bg-gray-50 rounded-lg border">
-                        {userDetails.email}
-                      </div>
-                    </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">QR Code Data</label>
-                      <div className="p-3 bg-gray-50 rounded-lg border font-mono text-sm">
-                        {JSON.stringify(scannedData, null, 2)}
-                      </div>
-                    </div>
 
                     <div className="flex space-x-3">
                       <button

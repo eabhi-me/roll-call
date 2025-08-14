@@ -71,36 +71,7 @@ const Login = ({ onLogin }) => {
           className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
         >
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Role Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Login as</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole('user')}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    role === 'user'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <User className="w-5 h-5 mx-auto mb-1" />
-                  <span className="text-sm font-medium">Student</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('admin')}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    role === 'admin'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <GraduationCap className="w-5 h-5 mx-auto mb-1" />
-                  <span className="text-sm font-medium">Admin</span>
-                </button>
-              </div>
-            </div>
+            
 
             {/* Email Field */}
             <div className="space-y-2">
@@ -198,7 +169,7 @@ const Login = ({ onLogin }) => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2024 TNP Department. All rights reserved.
+            © 2025 RollCall. All rights reserved.
           </p>
         </div>
       </motion.div>

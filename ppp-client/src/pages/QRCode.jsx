@@ -264,14 +264,6 @@ const QRCodePage = ({ user, onLogout }) => {
                   <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                   <p>Attendance can only be marked by authorized administrators</p>
                 </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p>QR codes are valid for the current academic session</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p>If you lose access to your QR code, contact the TNP department</p>
-                </div>
               </div>
             </div>
 
@@ -279,23 +271,6 @@ const QRCodePage = ({ user, onLogout }) => {
             
           </motion.div>
         </div>
-
-        {/* QR Code Data (for debugging) */}
-        {process.env.NODE_ENV === 'development' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 bg-gray-100 rounded-xl p-6"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">QR Code Data (Development Only)</h3>
-            <div className="bg-white p-4 rounded-lg border">
-              <pre className="text-xs text-gray-600 overflow-x-auto">
-                {JSON.stringify(JSON.parse(qrValue || '{}'), null, 2)}
-              </pre>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );

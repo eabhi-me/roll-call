@@ -46,9 +46,7 @@ const CreateEvent = ({ user, onLogout }) => {
         description: data.description,
         date: data.date,
         time: data.time,
-        duration: data.duration,
         location: data.location,
-        maxAttendees: data.maxAttendees,
         department: data.department,
         qrCode: `EVENT_${Date.now()}_QR_CODE`,
         status: 'upcoming',
@@ -192,31 +190,7 @@ const CreateEvent = ({ user, onLogout }) => {
 
                 {/* Duration and Location */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Duration (hours) *</label>
-                    <input
-                      type="number"
-                      {...register('duration', {
-                        required: 'Duration is required',
-                        min: {
-                          value: 0.5,
-                          message: 'Duration must be at least 0.5 hours',
-                        },
-                        max: {
-                          value: 8,
-                          message: 'Duration cannot exceed 8 hours',
-                        },
-                      })}
-                      min="0.5"
-                      max="8"
-                      step="0.5"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      placeholder="2.5"
-                    />
-                    {errors.duration && (
-                      <p className="text-red-500 text-sm">{errors.duration.message}</p>
-                    )}
-                  </div>
+                  
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Location *</label>
@@ -239,33 +213,6 @@ const CreateEvent = ({ user, onLogout }) => {
 
                 {/* Max Attendees and Department */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Maximum Attendees *</label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="number"
-                        {...register('maxAttendees', {
-                          required: 'Maximum attendees is required',
-                          min: {
-                            value: 1,
-                            message: 'Must allow at least 1 attendee',
-                          },
-                          max: {
-                            value: 500,
-                            message: 'Cannot exceed 500 attendees',
-                          },
-                        })}
-                        min="1"
-                        max="500"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        placeholder="100"
-                      />
-                    </div>
-                    {errors.maxAttendees && (
-                      <p className="text-red-500 text-sm">{errors.maxAttendees.message}</p>
-                    )}
-                  </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Target Department</label>
@@ -301,7 +248,7 @@ const CreateEvent = ({ user, onLogout }) => {
                   ) : (
                     <div className="flex items-center justify-center">
                       <Plus className="w-5 h-5 mr-2" />
-                      Create Event & Generate QR
+                      Create Event
                     </div>
                   )}
                 </motion.button>
@@ -320,7 +267,6 @@ const CreateEvent = ({ user, onLogout }) => {
                 <QrCode className="w-8 h-8 text-green-600" />
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Event Created Successfully!</h1>
-              <p className="text-gray-600">Your QR code is ready for attendance tracking</p>
             </div>
 
             {/* Event Details */}
@@ -357,19 +303,7 @@ const CreateEvent = ({ user, onLogout }) => {
                   </div>
                 </div>
 
-                {/* QR Code */}
-                <div className="flex flex-col items-center justify-center">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">QR Code</h3>
-                  <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                    <QRCodeSVG
-                      value={generatedEvent.qrCode}
-                      size={200}
-                      level="H"
-                      includeMargin={true}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-500 mt-3">Scan this QR code to mark attendance</p>
-                </div>
+                
               </div>
             </div>
 

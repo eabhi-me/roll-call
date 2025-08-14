@@ -38,22 +38,16 @@ const Profile = ({ user, onLogout }) => {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        phone: user.phone || '',
         studentId: user.studentId || '',
         trade: user.trade || '',
         year: user.year || '',
-        address: user.address || '',
-        emergencyContact: user.emergencyContact || ''
       });
       setOriginalData({
         name: user.name || '',
         email: user.email || '',
-        phone: user.phone || '',
         studentId: user.studentId || '',
         trade: user.trade || '',
         year: user.year || '',
-        address: user.address || '',
-        emergencyContact: user.emergencyContact || ''
       });
     }
   }, [user]);
@@ -213,45 +207,6 @@ const Profile = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      isEditing ? 'bg-white' : 'bg-gray-50'
-                    }`}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Student ID
-                </label>
-                <div className="relative">
-                  <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    name="studentId"
-                    value={formData.studentId}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      isEditing ? 'bg-white' : 'bg-gray-50'
-                    }`}
-                    placeholder="Enter your student ID"
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Academic Information */}
@@ -294,69 +249,6 @@ const Profile = ({ user, onLogout }) => {
                     <option key={year} value={year}>{year}</option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    rows={3}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      isEditing ? 'bg-white' : 'bg-gray-50'
-                    }`}
-                    placeholder="Enter your address"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Emergency Contact
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    name="emergencyContact"
-                    value={formData.emergencyContact}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      isEditing ? 'bg-white' : 'bg-gray-50'
-                    }`}
-                    placeholder="Enter emergency contact"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Information */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h4 className="text-md font-medium text-gray-900 mb-4">Account Information</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="flex justify-between py-2">
-                <span className="text-gray-600">Account Type:</span>
-                <span className="font-medium">{user?.role === 'admin' ? 'Administrator' : 'Student'}</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-600">Member Since:</span>
-                <span className="font-medium">January 2024</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-600">Last Updated:</span>
-                <span className="font-medium">Today</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-600">Profile Status:</span>
-                <span className="text-green-600 font-medium">Complete</span>
               </div>
             </div>
           </div>
