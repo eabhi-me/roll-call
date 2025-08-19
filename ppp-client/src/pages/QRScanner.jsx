@@ -290,7 +290,7 @@ const QRScanner = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -306,9 +306,7 @@ const QRScanner = () => {
             <span>Back</span>
           </button>
           
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            QR Scanner
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">QR Scanner</h1>
           
           <div className="w-20"></div>
         </motion.div>
@@ -318,9 +316,9 @@ const QRScanner = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl p-8 text-center"
+            className="bg-white border border-gray-200 rounded-md p-6 text-center"
           >
-            <div className="w-32 h-32 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <Scan className="w-16 h-16 text-white" />
             </div>
             
@@ -341,7 +339,7 @@ const QRScanner = () => {
                   <p className="text-gray-500 text-xs text-center">{cameraError}</p>
                   <button
                     onClick={startCamera}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
                   >
                     Retry Camera
                   </button>
@@ -366,7 +364,7 @@ const QRScanner = () => {
                       ? 'border-green-500 bg-green-500 bg-opacity-20' 
                       : 'border-blue-500 animate-pulse'
                   }`}>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white rounded-lg">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white rounded-md">
                       <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-500"></div>
                       <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-500"></div>
                       <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-500"></div>
@@ -376,7 +374,7 @@ const QRScanner = () => {
                     {/* Scanning line animation */}
                     {scanningStatus === 'scanning' && (
                       <div className="absolute top-1/2 left-0 w-full h-0.5 bg-blue-500 animate-pulse">
-                        <div className="w-full h-full bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-ping"></div>
+                        <div className="w-full h-full bg-blue-500 animate-ping"></div>
                       </div>
                     )}
                     
@@ -416,7 +414,7 @@ const QRScanner = () => {
                 <button
                   onClick={startCamera}
                   disabled={isScanning}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="bg-blue-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <Camera className="w-5 h-5" />
                   <span>Start Camera</span>
@@ -424,36 +422,21 @@ const QRScanner = () => {
               ) : (
                 <button
                   onClick={stopCamera}
-                  className="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-all duration-300 flex items-center space-x-2"
+                  className="bg-red-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center space-x-2"
                 >
                   <XCircle className="w-5 h-5" />
                   <span>Stop Camera</span>
                 </button>
               )}
-              
-              <button
-                onClick={simulateQRScan}
-                disabled={isScanning || isProcessing}
-                className="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                <Smartphone className="w-5 h-5" />
-                <span>Test Scan</span>
-              </button>
+           
             </div>
 
-            {/* Manual Input Option */}
-            <div className="mb-6">
-              <button
-                onClick={handleManualQRInput}
-                className="text-blue-600 hover:text-blue-700 text-sm underline"
-              >
-                Enter QR code manually
-              </button>
-            </div>
+            
+            
 
             {/* Scanning Stats */}
             {scanAttempts > 0 && (
-              <div className="mb-6 p-3 bg-blue-50 rounded-lg">
+              <div className="mb-6 p-3 bg-blue-50 rounded-md">
                 <p className="text-sm text-blue-700">
                   Scan attempts: {scanAttempts}
                 </p>
@@ -461,7 +444,7 @@ const QRScanner = () => {
             )}
 
             {/* Tips */}
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-4 bg-blue-50 rounded-md">
               <div className="flex items-center space-x-2 text-blue-700 mb-2">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">Tips for scanning:</span>
@@ -483,9 +466,9 @@ const QRScanner = () => {
             className="space-y-6"
           >
             {/* User Details Card */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
+            <div className="bg-white border border-gray-200 rounded-md p-6">
               <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
                   <Users className="w-8 h-8 text-white" />
                 </div>
                 <div>
@@ -553,7 +536,7 @@ const QRScanner = () => {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-4">QR Code scanned but user not found</p>
-                  <div className="bg-gray-100 p-4 rounded-lg text-left">
+                  <div className="bg-gray-100 p-4 rounded-md text-left">
                     <p className="text-sm text-gray-700 mb-2">Scanned QR Data:</p>
                     <pre className="text-xs text-gray-600 overflow-x-auto">{scannedQRData}</pre>
                   </div>
@@ -563,10 +546,10 @@ const QRScanner = () => {
 
             {/* Action Buttons */}
             {userDetails && (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
+              <div className="bg-white border border-gray-200 rounded-md p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Next Steps</h3>
                 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
                   <div className="flex items-center space-x-2 text-green-800">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">Student verified successfully!</span>
@@ -579,14 +562,14 @@ const QRScanner = () => {
                 <div className="flex space-x-4">
                   <button
                     onClick={goToAttendanceMarking}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                    className="flex-1 bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
                   >
                     <Calendar className="w-5 h-5" />
                     <span>Mark Attendance</span>
                   </button>
                   <button
                     onClick={resetScanner}
-                    className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex-1 bg-gray-600 text-white py-3 rounded-md hover:bg-gray-700 transition-colors"
                   >
                     Scan Another
                   </button>

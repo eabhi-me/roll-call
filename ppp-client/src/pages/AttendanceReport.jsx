@@ -164,16 +164,14 @@ const AttendanceReport = ({ user, onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Compact Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-3">
               <Link to="/admin" className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-white" />
-              </div>
+              
               <h1 className="text-lg font-bold text-gray-900">Attendance Report</h1>
             </div>
             
@@ -193,7 +191,7 @@ const AttendanceReport = ({ user, onLogout }) => {
         
 
         {/* Compact Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-md border border-gray-200 p-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             <div className="lg:col-span-2">
               <div className="relative">
@@ -252,7 +250,7 @@ const AttendanceReport = ({ user, onLogout }) => {
         </div>
 
         {/* Attendance Data */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-900">Attendance Records</h3>
@@ -263,28 +261,18 @@ const AttendanceReport = ({ user, onLogout }) => {
           {/* Mobile Card View */}
           <div className="lg:hidden">
             <div className="divide-y divide-gray-200">
-              {filteredData.map((record) => (
-                <div key={record.id} className="p-4 hover:bg-gray-50">
+              {filteredData.map((record, idx) => (
+                <div key={record._id || record.id || `${record.studentId}-${record.date}-${idx}`} className="p-4 hover:bg-gray-50">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="text-sm font-medium text-gray-900">{record.studentName}</h4>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(record.eventType)}`}>
-                          {record.eventType}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-1">{record.studentId} • {record.trade.split(' ')[0]}</p>
-                      <p className="text-sm text-gray-700 mb-1">{record.eventName}</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span className="flex items-center">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {record.date}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {record.location}
-                        </span>
-                      </div>
+                      <h4 className="text-sm font-medium text-gray-900">{record.studentName}</h4>
+                      <p className="text-xs text-gray-500">Roll No: {record.studentId}</p>
+                      <p className="text-xs text-gray-500 mb-1">Trade: {(record.trade || record.user_id?.trade || '').split(' ')[0] || 'N/A'}</p>
+                      <p className="text-sm text-gray-700">Event: {record.eventName}</p>
+                      <p className="text-xs text-gray-500 flex items-center mt-1">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {record.date}{record.attendanceTime ? ` • ${record.attendanceTime}` : ''}
+                      </p>
                     </div>
                     <div className="text-right">
                       <div className="flex items-center justify-end mb-1">
@@ -295,12 +283,6 @@ const AttendanceReport = ({ user, onLogout }) => {
                           {record.status}
                         </span>
                       </div>
-                      {record.attendanceTime && (
-                        <p className="text-xs text-gray-500">
-                          <Clock className="w-3 h-3 inline mr-1" />
-                          {record.attendanceTime}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -314,42 +296,23 @@ const AttendanceReport = ({ user, onLogout }) => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Roll No</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trade</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filteredData.map((record) => (
-                    <tr key={record.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{record.studentName}</p>
-                          <p className="text-xs text-gray-500">{record.studentId} • {record.trade.split(' ')[0]}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div>
-                          <p className="text-sm text-gray-900">{record.eventName}</p>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(record.eventType)}`}>
-                            {record.eventType}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-sm text-gray-900">{record.date}</div>
-                        {record.attendanceTime && (
-                          <div className="text-xs text-gray-500">{record.attendanceTime}</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center text-sm text-gray-900">
-                          <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-                          {record.location}
-                        </div>
+                  {filteredData.map((record, idx) => (
+                    <tr key={record._id || record.id || `${record.studentId}-${record.eventName}-${record.date || idx}`} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900">{record.studentName}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{record.studentId}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{(record.trade || record.user_id?.trade || '').split(' ')[0] || 'N/A'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{record.eventName}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {record.date}{record.attendanceTime ? ` • ${record.attendanceTime}` : ''}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center">
@@ -360,11 +323,6 @@ const AttendanceReport = ({ user, onLogout }) => {
                             {record.status}
                           </span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button className="text-xs text-blue-600 hover:text-blue-700">
-                          <Eye className="w-4 h-4" />
-                        </button>
                       </td>
                     </tr>
                   ))}

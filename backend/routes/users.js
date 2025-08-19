@@ -53,7 +53,78 @@ router.get('/', adminAuth, async (req, res) => {
   }
 });
 
-// Get User by ID (Admin only)
+// Get User Statistics (Admin only) - keep BEFORE parameterized routes
+router.get('/stats/overview', adminAuth, async (req, res) => {
+  try {
+    const { department } = req.query;
+
+    const filter = {};
+    if (department && department !== 'All Departments') {
+      filter.department = department;
+    }
+
+    // Get user counts
+    const totalUsers = await User.countDocuments(filter);
+    const activeUsers = await User.countDocuments({ ...filter, isActive: true });
+    const inactiveUsers = await User.countDocuments({ ...filter, isActive: false });
+    const adminUsers = await User.countDocuments({ ...filter, role: 'admin' });
+    const regularUsers = await User.countDocuments({ ...filter, role: 'user' });
+
+    // Get department breakdown
+    const departmentStats = await User.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: '$department',
+          count: { $sum: 1 },
+          active: { $sum: { $cond: ['$isActive', 1, 0] } },
+          inactive: { $sum: { $cond: ['$isActive', 0, 1] } }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Get trade breakdown
+    const tradeStats = await User.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: '$trade',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        summary: {
+          totalUsers,
+          activeUsers,
+          inactiveUsers,
+          adminUsers,
+          regularUsers
+        },
+        departmentStats,
+        tradeStats
+      }
+    });
+
+  } catch (error) {
+    console.error('User statistics error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Temporary alias for backward compatibility
+router.get('/stats', adminAuth, (req, res, next) => {
+  // Forward to the overview handler
+  req.url = '/stats/overview';
+  next();
+});
+
+// Get User by ID (Admin only) - keep AFTER stats routes
 router.get('/:userId', adminAuth, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -84,6 +155,9 @@ router.get('/:userId', adminAuth, async (req, res) => {
 
   } catch (error) {
     console.error('User fetch error:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -193,69 +267,6 @@ router.get('/department/:department', adminAuth, async (req, res) => {
   }
 });
 
-// Get User Statistics (Admin only)
-router.get('/stats/overview', adminAuth, async (req, res) => {
-  try {
-    const { department } = req.query;
-
-    const filter = {};
-    if (department && department !== 'All Departments') {
-      filter.department = department;
-    }
-
-    // Get user counts
-    const totalUsers = await User.countDocuments(filter);
-    const activeUsers = await User.countDocuments({ ...filter, isActive: true });
-    const inactiveUsers = await User.countDocuments({ ...filter, isActive: false });
-    const adminUsers = await User.countDocuments({ ...filter, role: 'admin' });
-    const regularUsers = await User.countDocuments({ ...filter, role: 'user' });
-
-    // Get department breakdown
-    const departmentStats = await User.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: '$department',
-          count: { $sum: 1 },
-          active: { $sum: { $cond: ['$isActive', 1, 0] } },
-          inactive: { $sum: { $cond: ['$isActive', 0, 1] } }
-        }
-      },
-      { $sort: { count: -1 } }
-    ]);
-
-    // Get trade breakdown
-    const tradeStats = await User.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: '$trade',
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { count: -1 } }
-    ]);
-
-    res.json({
-      success: true,
-      stats: {
-        summary: {
-          totalUsers,
-          activeUsers,
-          inactiveUsers,
-          adminUsers,
-          regularUsers
-        },
-        departmentStats,
-        tradeStats
-      }
-    });
-
-  } catch (error) {
-    console.error('User statistics error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Bulk Update Users (Admin only)
 router.put('/bulk/update', adminAuth, async (req, res) => {

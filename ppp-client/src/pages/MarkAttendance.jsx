@@ -130,7 +130,7 @@ const MarkAttendance = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -146,9 +146,7 @@ const MarkAttendance = () => {
             <span>Back</span>
           </button>
           
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Mark Attendance
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Mark Attendance</h1>
           
           <div className="w-20"></div>
         </motion.div>
@@ -160,9 +158,9 @@ const MarkAttendance = () => {
             className="space-y-6"
           >
             {/* User Details Card */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
+            <div className="bg-white border border-gray-200 rounded-md p-6">
               <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
                   <Users className="w-8 h-8 text-white" />
                 </div>
                 <div>
@@ -207,7 +205,7 @@ const MarkAttendance = () => {
             </div>
 
             {/* Event Selection */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
+            <div className="bg-white border border-gray-200 rounded-md p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <Calendar className="w-5 h-5 mr-2 text-blue-600" />
                 Select Event/Meeting
@@ -223,7 +221,7 @@ const MarkAttendance = () => {
                   <select
                     value={selectedEvent}
                     onChange={(e) => setSelectedEvent(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Choose an event or meeting...</option>
                     {events.map((event) => (
@@ -234,7 +232,7 @@ const MarkAttendance = () => {
                   </select>
 
                   {selectedEvent && (
-                    <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="p-4 bg-blue-50 rounded-md">
                       <h4 className="font-semibold text-blue-900 mb-2">Selected Event Details:</h4>
                       {(() => {
                         const event = events.find(e => e._id === selectedEvent);
@@ -278,7 +276,7 @@ const MarkAttendance = () => {
 
             {/* Attendance Status */}
             {selectedEvent && (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
+              <div className="bg-white border border-gray-200 rounded-md p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Attendance Status</h3>
                 
                 <div className="space-y-3">
@@ -326,7 +324,7 @@ const MarkAttendance = () => {
             {/* Submit Button */}
             {selectedEvent && (
               <div className="bg-white rounded-2xl shadow-xl p-6">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
                   <div className="flex items-center space-x-2 text-green-800">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">Ready to mark attendance</span>
@@ -340,13 +338,13 @@ const MarkAttendance = () => {
                   <button
                     onClick={markAttendance}
                     disabled={isSubmitting}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? 'Marking Attendance...' : 'Mark Attendance'}
                   </button>
                   <button
                     onClick={resetForm}
-                    className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex-1 bg-gray-600 text-white py-3 rounded-md hover:bg-gray-700 transition-colors"
                   >
                     Reset
                   </button>
@@ -359,7 +357,7 @@ const MarkAttendance = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl p-6 text-center"
+            className="bg-white border border-gray-200 rounded-md p-6 text-center"
           >
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-10 h-10 text-green-600" />

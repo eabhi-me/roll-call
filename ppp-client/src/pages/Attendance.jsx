@@ -47,7 +47,7 @@ const Attendance = ({ user, onLogout }) => {
   const fetchAttendanceHistory = async () => {
     try {
       setLoading(true);
-      const response = await attendanceAPI.getUserAttendanceHistory(user.id);
+      const response = await attendanceAPI.getUserAttendance(user._id || user.id);
       
       if (response.success) {
         setAttendanceHistory(response.attendance);
@@ -162,16 +162,14 @@ const Attendance = ({ user, onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Compact Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-3">
               <Link to="/dashboard" className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-white" />
-              </div>
+              
               <h1 className="text-lg font-bold text-gray-900">My Attendance</h1>
             </div>
             
@@ -188,7 +186,7 @@ const Attendance = ({ user, onLogout }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Compact Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Total Events</p>
@@ -198,7 +196,7 @@ const Attendance = ({ user, onLogout }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Attended</p>
@@ -208,7 +206,7 @@ const Attendance = ({ user, onLogout }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Absent</p>
@@ -218,7 +216,7 @@ const Attendance = ({ user, onLogout }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Attendance Rate</p>
@@ -232,7 +230,7 @@ const Attendance = ({ user, onLogout }) => {
         </div>
 
         {/* Compact Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-md border border-gray-200 p-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div className="lg:col-span-2">
               <div className="relative">
@@ -283,7 +281,7 @@ const Attendance = ({ user, onLogout }) => {
         </div>
 
         {/* Attendance History */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-900">Attendance History</h3>
@@ -291,7 +289,7 @@ const Attendance = ({ user, onLogout }) => {
             </div>
           </div>
 
-          {/* Mobile Card View */}
+          {/* Mobile Card View (Event, Date, Status only) */}
           <div className="lg:hidden">
             <div className="divide-y divide-gray-200">
               {filteredHistory.map((record) => {
@@ -300,34 +298,11 @@ const Attendance = ({ user, onLogout }) => {
                   <div key={record.id} className="p-4 hover:bg-gray-50">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="text-sm font-medium text-gray-900">{record.eventName}</h4>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(record.eventType)}`}>
-                            {record.eventType}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 mb-1">{record.trade.split(' ')[0]}</p>
-                        <div className="flex items-center space-x-4 text-xs text-gray-500 mb-1">
-                          <span className="flex items-center">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {record.date}
-                          </span>
-                          <span className="flex items-center">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {record.time}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-xs text-gray-500">
-                          <span className="flex items-center">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            {record.location}
-                          </span>
-                          {arrivalStatus && (
-                            <span className={`${arrivalStatus.color}`}>
-                              {arrivalStatus.text}
-                            </span>
-                          )}
-                        </div>
+                        <h4 className="text-sm font-medium text-gray-900">{record.eventName}</h4>
+                        <p className="text-xs text-gray-500 flex items-center mt-1">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {record.date}{record.time ? ` • ${record.time}` : ''}
+                        </p>
                       </div>
                       <div className="text-right">
                         <div className="flex items-center justify-end mb-1">
@@ -338,11 +313,6 @@ const Attendance = ({ user, onLogout }) => {
                             {record.status}
                           </span>
                         </div>
-                        {record.arrivalTime && (
-                          <p className="text-xs text-gray-500">
-                            Arrived: {record.arrivalTime}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -359,37 +329,21 @@ const Attendance = ({ user, onLogout }) => {
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Arrival</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredHistory.map((record) => {
-                    const arrivalStatus = getArrivalStatus(record.arrivalTime, record.time);
                     return (
                       <tr key={record.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
                           <div>
                             <p className="text-sm font-medium text-gray-900">{record.eventName}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(record.eventType)}`}>
-                                {record.eventType}
-                              </span>
-                              <span className="text-xs text-gray-500">{record.trade.split(' ')[0]}</span>
-                            </div>
                           </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-sm text-gray-900">{record.date}</div>
                           <div className="text-xs text-gray-500">{record.time}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center text-sm text-gray-900">
-                            <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-                            {record.location}
-                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center">
@@ -400,25 +354,6 @@ const Attendance = ({ user, onLogout }) => {
                               {record.status}
                             </span>
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          {record.arrivalTime ? (
-                            <div>
-                              <div className="text-sm text-gray-900">{record.arrivalTime}</div>
-                              {arrivalStatus && (
-                                <div className={`text-xs ${arrivalStatus.color}`}>
-                                  {arrivalStatus.text}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-500">N/A</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <button className="text-xs text-blue-600 hover:text-blue-700">
-                            <Eye className="w-4 h-4" />
-                          </button>
                         </td>
                       </tr>
                     );

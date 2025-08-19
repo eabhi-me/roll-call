@@ -101,12 +101,23 @@ router.get('/user/:userId', userAuth, async (req, res) => {
 
     const total = await Attendance.countDocuments(filter);
 
+    // Flatten to minimal fields for My Attendance page (keep eventType for filtering if needed)
+    const flattened = attendance.map((r) => ({
+      _id: r._id,
+      eventName: r.event_id?.title || '',
+      date: r.event_id?.date || '',
+      time: r.event_id?.time || '',
+      status: r.status,
+      eventType: r.event_id?.event_type || '',
+      createdAt: r.createdAt,
+    }));
+
     // Get attendance statistics
     const stats = await Attendance.getStats({ user_id: userId });
 
     res.json({
       success: true,
-      attendance: attendance,
+      attendance: flattened,
       pagination: {
         current: parseInt(page),
         total: Math.ceil(total / limit),
@@ -220,12 +231,26 @@ router.get('/report', adminAuth, async (req, res) => {
 
     const total = await Attendance.countDocuments(filter);
 
+    // Flatten for client consumption
+    const flattened = attendance.map((r) => ({
+      _id: r._id,
+      studentName: r.user_id?.name || '',
+      studentId: r.user_id?.roll_no || '',
+      trade: r.user_id?.trade || '',
+      eventName: r.event_id?.title || '',
+      date: r.event_id?.date || '',
+      attendanceTime: r.event_id?.time || '',
+      status: r.status,
+      eventType: r.event_id?.event_type || '',
+      createdAt: r.createdAt,
+    }));
+
     // Get overall statistics
     const stats = await Attendance.getStats();
 
     res.json({
       success: true,
-      attendance: attendance,
+      attendance: flattened,
       pagination: {
         current: parseInt(page),
         total: Math.ceil(total / limit),
@@ -309,10 +334,18 @@ router.get('/report/pdf', adminAuth, async (req, res) => {
 
     // Add attendance records
     attendance.forEach((record, index) => {
-      doc.fontSize(10).text(`${index + 1}. ${record.user_id.name} (${record.user_id.roll_no})`);
-      doc.fontSize(8).text(`   Event: ${record.event_id.title} - ${record.event_id.event_type}`);
-      doc.fontSize(8).text(`   Date: ${record.event_id.date} at ${record.event_id.time}`);
-      doc.fontSize(8).text(`   Status: ${record.status} | Verified by: ${record.verified_by.name}`);
+      const name = record.user_id?.name || '';
+      const roll = record.user_id?.roll_no || '';
+      const trade = record.user_id?.trade || '';
+      const title = record.event_id?.title || '';
+      const eType = record.event_id?.event_type || '';
+      const eDate = record.event_id?.date || '';
+      const eTime = record.event_id?.time || '';
+      const verifier = record.verified_by?.name || '';
+      doc.fontSize(10).text(`${index + 1}. ${name} (${roll}) - ${trade}`);
+      doc.fontSize(8).text(`   Event: ${title} - ${eType}`);
+      doc.fontSize(8).text(`   Date: ${eDate} at ${eTime}`);
+      doc.fontSize(8).text(`   Status: ${record.status} | Verified by: ${verifier}`);
       doc.fontSize(8).text(`   Marked on: ${record.createdAt.toLocaleDateString()}`);
       doc.moveDown(0.5);
     });

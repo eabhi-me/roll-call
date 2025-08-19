@@ -120,7 +120,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Mobile Sidebar Overlay */}
       {isMenuOpen && (
         <div 
@@ -134,18 +134,14 @@ const LandingPage = () => {
         initial={{ x: '-100%' }}
         animate={{ x: isMenuOpen ? 0 : '-100%' }}
         transition={{ type: 'tween', duration: 0.3 }}
-        className="fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 md:hidden"
+        className="fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 md:hidden"
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <QrCode className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                RollCall
-              </span>
+      
+              <span className="text-lg font-bold text-gray-900">RollCall</span>
             </div>
             <button
               onClick={() => setIsMenuOpen(false)}
@@ -211,7 +207,7 @@ const LandingPage = () => {
                   
                   <Link 
                     to="/signup" 
-                    className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-300"
+                    className="flex items-center space-x-3 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="w-5 h-5" />
@@ -237,7 +233,7 @@ const LandingPage = () => {
       </motion.div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 z-30">
+      <nav className="fixed top-0 w-full bg-white border-b border-gray-200 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -246,12 +242,8 @@ const LandingPage = () => {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center space-x-2"
             >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <QrCode className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                RollCall
-              </span>
+              
+              <span className="text-lg sm:text-xl font-bold text-gray-900">RollCall</span>
             </motion.div>
 
             {/* Desktop Navigation */}
@@ -283,7 +275,7 @@ const LandingPage = () => {
                     <LogIn className="w-4 h-4" />
                     <span>Login</span>
                   </Link>
-                  <Link to="/signup" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center space-x-1">
+                  <Link to="/signup" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1">
                     <User className="w-4 h-4" />
                     <span>Sign Up</span>
                   </Link>
@@ -315,9 +307,7 @@ const LandingPage = () => {
               className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-4 sm:mb-6"
             >
               Modern QR-Based
-              <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Attendance System
-              </span>
+              <span className="block text-blue-700">Attendance System</span>
             </motion.h1>
             
             <motion.p 
@@ -337,7 +327,7 @@ const LandingPage = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4"
               >
-                <Link to="/signup" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2">
+                <Link to="/signup" className="w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
                   <span>Get Started</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
@@ -357,35 +347,33 @@ const LandingPage = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-12 sm:mb-16"
+              className="mb-8 sm:mb-10"
             >
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Welcome back, {user.name}!
               </h2>
-              <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-                Access your tools and manage your {user.role === 'admin' ? 'events and attendance' : 'attendance and events'}.
+              <p className="mt-2 text-gray-600">
+                Quick access to your tools.
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {(user.role === 'admin' ? adminTools : userTools).map((tool, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: index * 0.1 }}
-                  className="bg-white p-6 sm:p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group"
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="border border-gray-200 rounded-md p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <Link to={tool.link} className="block">
-                    <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r ${tool.color} rounded-lg flex items-center justify-center text-white mb-4 sm:mb-6 group-hover:scale-110 transition-transform`}>
+                  <Link to={tool.link} className="flex items-start">
+                    <div className="w-10 h-10 mr-3 bg-blue-600 rounded-md flex items-center justify-center text-white">
                       {tool.icon}
                     </div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 group-hover:text-blue-600 transition-colors">
-                      {tool.title}
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      {tool.description}
-                    </p>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">{tool.title}</h3>
+                      <p className="mt-1 text-sm text-gray-600">{tool.description}</p>
+                    </div>
                   </Link>
                 </motion.div>
               ))}
@@ -410,24 +398,22 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="space-y-4 max-w-3xl mx-auto">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                className="bg-white p-6 sm:p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="flex items-start border border-gray-200 bg-white rounded-md p-4"
               >
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white mb-4 sm:mb-6">
+                <div className="w-10 h-10 mr-3 bg-blue-600 rounded-md flex items-center justify-center text-white">
                   {feature.icon}
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600">
-                  {feature.description}
-                </p>
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">{feature.title}</h3>
+                  <p className="mt-1 text-sm text-gray-600">{feature.description}</p>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -450,7 +436,7 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 step: "01",
@@ -473,11 +459,9 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.2 }}
-                className="text-center"
+                className="text-center border border-gray-200 rounded-md p-6"
               >
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6">
-                  {item.step}
-                </div>
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6">{item.step}</div>
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
                   {item.title}
                 </h3>
@@ -491,7 +475,7 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-12 sm:py-16 bg-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -505,12 +489,12 @@ const LandingPage = () => {
               Join hundreds of educational institutions already using our QR-based attendance system
             </p>
             {!user ? (
-              <Link to="/signup" className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:shadow-xl transition-all duration-300 inline-flex items-center space-x-2">
+              <Link to="/signup" className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-blue-50 transition-colors inline-flex items-center space-x-2">
                 <span>Start Free Trial</span>
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
             ) : (
-              <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:shadow-xl transition-all duration-300 inline-flex items-center space-x-2">
+              <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-blue-50 transition-colors inline-flex items-center space-x-2">
                 <span>Go to Dashboard</span>
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
@@ -525,7 +509,7 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <QrCode className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-lg sm:text-xl font-bold">RollCall</span>

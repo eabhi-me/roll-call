@@ -110,7 +110,7 @@ const CreateEvent = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -126,9 +126,7 @@ const CreateEvent = ({ user, onLogout }) => {
             <span>Back</span>
           </button>
           
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Create New Event
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
           
           <div className="w-20"></div>
         </motion.div>
@@ -137,12 +135,10 @@ const CreateEvent = ({ user, onLogout }) => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-xl p-8"
+          className="bg-white border border-gray-200 rounded-md p-8"
         >
           <div className="flex items-center space-x-4 mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-              <Plus className="w-8 h-8 text-white" />
-            </div>
+            
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Event Details</h2>
               <p className="text-gray-600">Fill in the details to create a new event</p>
@@ -162,7 +158,7 @@ const CreateEvent = ({ user, onLogout }) => {
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="Enter event title"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 maxLength={150}
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -182,7 +178,7 @@ const CreateEvent = ({ user, onLogout }) => {
                 onChange={handleInputChange}
                 placeholder="Enter event description (optional)"
                 rows={4}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -200,7 +196,7 @@ const CreateEvent = ({ user, onLogout }) => {
                 name="event_type"
                 value={formData.event_type}
                 onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="Event">Event</option>
                 <option value="TNP Meeting">TNP Meeting</option>
@@ -221,7 +217,7 @@ const CreateEvent = ({ user, onLogout }) => {
                   value={formData.date}
                   onChange={handleInputChange}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -236,7 +232,7 @@ const CreateEvent = ({ user, onLogout }) => {
                   name="time"
                   value={formData.time}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -253,7 +249,7 @@ const CreateEvent = ({ user, onLogout }) => {
                 value={formData.location}
                 onChange={handleInputChange}
                 placeholder="Enter event location"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 maxLength={200}
               />
             </div>
@@ -263,7 +259,7 @@ const CreateEvent = ({ user, onLogout }) => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                className="bg-blue-50 border border-blue-200 rounded-md p-4"
               >
                 <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
                   <CheckCircle className="w-5 h-5 mr-2" />
@@ -303,7 +299,7 @@ const CreateEvent = ({ user, onLogout }) => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="flex-1 bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isSubmitting ? (
                   <>
@@ -321,27 +317,27 @@ const CreateEvent = ({ user, onLogout }) => {
               <button
                 type="button"
                 onClick={() => navigate('/admin')}
-                className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                className="flex-1 bg-gray-600 text-white py-3 rounded-md hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
             </div>
-          </form>
 
-          {/* Tips */}
-          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center space-x-2 text-yellow-800 mb-2">
-              <AlertCircle className="w-5 h-5" />
-              <span className="font-medium">Tips for creating events:</span>
+            {/* Tips */}
+            <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <div className="flex items-center space-x-2 text-yellow-800 mb-2">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">Tips for creating events:</span>
+              </div>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                <li>• Choose a clear and descriptive title</li>
+                <li>• Provide a detailed description to help students understand the event</li>
+                <li>• Select the appropriate event type (Event or TNP Meeting)</li>
+                <li>• Ensure the date is not in the past</li>
+                <li>• Provide a specific location for easy navigation</li>
+              </ul>
             </div>
-            <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• Choose a clear and descriptive title</li>
-              <li>• Provide a detailed description to help students understand the event</li>
-              <li>• Select the appropriate event type (Event or TNP Meeting)</li>
-              <li>• Ensure the date is not in the past</li>
-              <li>• Provide a specific location for easy navigation</li>
-            </ul>
-          </div>
+          </form>
         </motion.div>
       </div>
     </div>

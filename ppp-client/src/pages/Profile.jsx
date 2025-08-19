@@ -110,7 +110,7 @@ const Profile = ({ user, onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -118,9 +118,7 @@ const Profile = ({ user, onLogout }) => {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-                </div>
+                
                 <h1 className="text-xl font-bold text-gray-900">Profile</h1>
               </div>
             </div>
@@ -179,7 +177,7 @@ const Profile = ({ user, onLogout }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+          className="bg-white rounded-md border border-gray-200 p-8"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Personal Information</h3>
           

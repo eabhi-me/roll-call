@@ -3,7 +3,7 @@ import { Loader2, QrCode, Users, Calendar } from 'lucide-react';
 
 const LoadingPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         {/* Logo and Title */}
         <motion.div
@@ -20,7 +20,7 @@ const LoadingPage = () => {
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-0"
               >
-                <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
+                <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full"></div>
               </motion.div>
             </div>
           </div>
@@ -75,7 +75,7 @@ const LoadingPage = () => {
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
             transition={{ delay: 1.5, duration: 2 }}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full"
+            className="bg-blue-600 h-2 rounded-full"
           />
         </motion.div>
       </div>

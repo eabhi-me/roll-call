@@ -177,7 +177,7 @@ export const usersAPI = {
     method: 'DELETE',
   }),
 
-  getUserStats: () => apiCall('/users/stats'),
+  getUserStats: () => apiCall('/users/stats/overview'),
 
   getUsersByTrade: (trade, params = {}) => {
     const queryString = new URLSearchParams(params).toString();

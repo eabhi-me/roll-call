@@ -171,14 +171,12 @@ const UserDashboard = ({ user, onLogout }) => {
       )}
 
       {/* Mobile Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:hidden ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:hidden ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <QrCode className="w-4 h-4 text-white" />
-            </div>
+            
             <span className="text-sm font-bold text-gray-900">TNP Student</span>
           </div>
           <button
@@ -191,9 +189,9 @@ const UserDashboard = ({ user, onLogout }) => {
 
         <div className="px-4 py-6">
           {/* User Info */}
-          <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+          <div className="mb-6 p-3 bg-gray-50 rounded-md">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">{user.name.charAt(0)}</span>
               </div>
               <div>
@@ -241,7 +239,7 @@ const UserDashboard = ({ user, onLogout }) => {
       {/* Main Content */}
       <div className="lg:pl-0">
         {/* Compact Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14">
               <div className="flex items-center space-x-3">
@@ -251,9 +249,6 @@ const UserDashboard = ({ user, onLogout }) => {
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <QrCode className="w-4 h-4 text-white" />
-                </div>
                 <h1 className="text-lg font-bold text-gray-900">Student Dashboard</h1>
               </div>
               
@@ -281,7 +276,7 @@ const UserDashboard = ({ user, onLogout }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Compact Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Events Attended</p>
@@ -291,7 +286,7 @@ const UserDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Attendance Rate</p>
@@ -301,7 +296,7 @@ const UserDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">This Week</p>
@@ -311,7 +306,7 @@ const UserDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Upcoming</p>
@@ -325,7 +320,7 @@ const UserDashboard = ({ user, onLogout }) => {
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Upcoming Events */}
-            <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="lg:col-span-2 bg-white rounded-md border border-gray-200">
               <div className="px-4 py-3 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gray-900">Upcoming Events</h3>
@@ -341,8 +336,8 @@ const UserDashboard = ({ user, onLogout }) => {
               <div className="p-4">
                 <div className="space-y-4">
                   {upcomingEvents.map((event) => (
-                    <div key={event._id || event.id} className="flex items-start space-x-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div key={event._id || event.id} className="flex items-start space-x-4 p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+                      <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center flex-shrink-0">
                         <Calendar className="w-4 h-4 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -382,7 +377,7 @@ const UserDashboard = ({ user, onLogout }) => {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Quick Actions */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="bg-white rounded-md border border-gray-200 p-4">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
                 <div className="space-y-2">
                   <Link
@@ -417,7 +412,7 @@ const UserDashboard = ({ user, onLogout }) => {
               </div>
 
               {/* Recent Attendance */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="bg-white rounded-md border border-gray-200 p-4">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Recent Attendance</h3>
                 <div className="space-y-2">
                   {recentAttendance.map((record) => (
@@ -448,7 +443,7 @@ const UserDashboard = ({ user, onLogout }) => {
               
 
               {/* Tips Section */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="bg-white rounded-md border border-gray-200 p-4">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Tips</h3>
                 <div className="space-y-2 text-xs text-gray-600">
                   <div className="flex items-start">

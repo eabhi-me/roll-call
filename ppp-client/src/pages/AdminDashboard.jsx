@@ -222,12 +222,12 @@ const AdminDashboard = ({ user, onLogout }) => {
       )}
 
       {/* Mobile Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:hidden ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:hidden ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
               <QrCode className="w-4 h-4 text-white" />
             </div>
             <span className="text-sm font-bold text-gray-900">TNP Admin</span>
@@ -242,9 +242,9 @@ const AdminDashboard = ({ user, onLogout }) => {
 
         <div className="px-4 py-6">
           {/* User Info */}
-          <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+          <div className="mb-6 p-3 bg-gray-50 rounded-md">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">{user.name.charAt(0)}</span>
               </div>
               <div>
@@ -292,7 +292,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       {/* Main Content */}
       <div className="lg:pl-0">
         {/* Compact Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14">
               <div className="flex items-center space-x-3">
@@ -302,7 +302,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
                   <QrCode className="w-4 h-4 text-white" />
                 </div>
                 <h1 className="text-lg font-bold text-gray-900">TNP Admin Dashboard</h1>
@@ -332,7 +332,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Compact Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Total Students</p>
@@ -342,7 +342,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Total Events</p>
@@ -352,7 +352,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Upcoming</p>
@@ -362,7 +362,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Today's Attendance</p>
@@ -372,7 +372,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">This Week</p>
@@ -382,7 +382,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-600">Avg. Rate</p>
@@ -396,7 +396,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           {/* Desktop Event Attendance Section - Hidden on Mobile */}
           <div className="hidden lg:block">
             {/* Compact Filters */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+            <div className="bg-white rounded-md border border-gray-200 p-4 mb-6">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
                   <div className="relative">
@@ -437,7 +437,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Upcoming Events */}
-              <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="lg:col-span-2 bg-white rounded-md border border-gray-200">
                 <div className="px-4 py-3 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900">Upcoming Events</h3>
@@ -527,7 +527,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Quick Actions */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="bg-white rounded-md border border-gray-200 p-4">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
                   <div className="space-y-2">
                     <Link
@@ -562,11 +562,11 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </div>
 
                 {/* Recent Attendance */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="bg-white rounded-md border border-gray-200 p-4">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Recent Attendance</h3>
                   <div className="space-y-2">
-                    {recentAttendance.map((record) => (
-                      <div key={record.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                    {recentAttendance.map((record, idx) => (
+                      <div key={record._id || record.id || `${record.studentName}-${record.event}-${idx}`} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                         <div>
                           <p className="text-xs font-medium text-gray-900">{record.studentName}</p>
                           <p className="text-xs text-gray-500">{record.event}</p>
@@ -587,7 +587,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </div>
 
                 {/* Summary Stats */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="bg-white rounded-md border border-gray-200 p-4">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Summary</h3>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
@@ -610,7 +610,7 @@ const AdminDashboard = ({ user, onLogout }) => {
 
           {/* Mobile Quick Actions */}
           <div className="lg:hidden">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-md border border-gray-200 p-4">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
                 <Link

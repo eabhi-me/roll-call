@@ -153,7 +153,7 @@ const QRCodePage = ({ user, onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -161,9 +161,7 @@ const QRCodePage = ({ user, onLogout }) => {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <QrCode className="w-5 h-5 text-white" />
-                </div>
+                
                 <h1 className="text-xl font-bold text-gray-900">My QR Code</h1>
               </div>
             </div>
@@ -176,10 +174,10 @@ const QRCodePage = ({ user, onLogout }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
+          className="bg-white rounded-md border border-gray-200 p-6 mb-8"
         >
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1">
@@ -204,13 +202,13 @@ const QRCodePage = ({ user, onLogout }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+            className="bg-white rounded-md border border-gray-200 p-8"
           >
             <div className="text-center">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Your Attendance QR Code</h3>
               
               <div className="flex justify-center mb-6">
-                <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
+                <div className="bg-white p-4 rounded-md border-2 border-gray-200">
                   {qrValue ? (
                     <QRCodeReact
                       value={qrValue}
@@ -258,7 +256,7 @@ const QRCodePage = ({ user, onLogout }) => {
             className="space-y-6"
           >
             {/* How to Use */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-md border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Smartphone className="w-5 h-5 mr-2 text-blue-600" />
                 How to Use Your QR Code
@@ -284,7 +282,7 @@ const QRCodePage = ({ user, onLogout }) => {
             </div>
 
             {/* Important Notes */}
-            <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
+            <div className="bg-blue-50 rounded-md border border-blue-200 p-6">
               <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
                 <Info className="w-5 h-5 mr-2" />
                 Important Notes

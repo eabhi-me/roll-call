@@ -120,16 +120,14 @@ const NoticePage = ({ user, onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Compact Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-3">
               <Link to={user?.role === 'admin' ? '/admin' : '/dashboard'} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <div className="w-7 h-7 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Bell className="w-4 h-4 text-white" />
-              </div>
+              
               <h1 className="text-lg font-bold text-gray-900">Notices & Events</h1>
             </div>
             
@@ -158,7 +156,7 @@ const NoticePage = ({ user, onLogout }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Compact Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Total Events</p>
@@ -168,7 +166,7 @@ const NoticePage = ({ user, onLogout }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Upcoming</p>
@@ -178,7 +176,7 @@ const NoticePage = ({ user, onLogout }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Today</p>
@@ -188,7 +186,7 @@ const NoticePage = ({ user, onLogout }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Total Attendees</p>
@@ -200,7 +198,7 @@ const NoticePage = ({ user, onLogout }) => {
         </div>
 
         {/* Compact Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-md border border-gray-200 p-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <div className="relative">
@@ -247,7 +245,7 @@ const NoticePage = ({ user, onLogout }) => {
                 key={event._id} 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white rounded-md border border-gray-200 overflow-hidden"
               >
                 {/* Mobile Card View */}
                 <div className="lg:hidden">
