@@ -130,6 +130,10 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 8000;
 
+app.get('/', (req, res) => {
+  res.send('Hello World');
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
