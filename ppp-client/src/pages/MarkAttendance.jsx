@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../services/api';
 
 const MarkAttendance = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const MarkAttendance = () => {
   const fetchUpcomingEvents = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/events/upcoming', {
+      const response = await fetch(`${API_BASE_URL}/events/upcoming`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +75,7 @@ const MarkAttendance = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/attendance/mark', {
+      const response = await fetch(`${API_BASE_URL}/attendance/mark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

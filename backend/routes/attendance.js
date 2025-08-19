@@ -1,4 +1,5 @@
 import express from 'express';
+import PDFDocument from 'pdfkit';
 import Attendance from '../Models/attendanceModel.js';
 import Event from '../Models/eventModel.js';
 import User from '../Models/userModel.js';
@@ -34,6 +35,10 @@ router.post('/mark', adminAuth, validateAttendanceMarking, async (req, res) => {
       // Update existing attendance
       existingAttendance.status = status;
       existingAttendance.verified_by = req.user._id;
+      existingAttendance.verified_by_snapshot = {
+        name: req.user.name,
+        email: req.user.email
+      };
       
       await existingAttendance.save();
 
@@ -50,7 +55,11 @@ router.post('/mark', adminAuth, validateAttendanceMarking, async (req, res) => {
         user_id: userId,
         event_id: eventId,
         status: status,
-        verified_by: req.user._id
+        verified_by: req.user._id,
+        verified_by_snapshot: {
+          name: req.user.name,
+          email: req.user.email
+        }
       });
 
       await attendance.save();
@@ -146,6 +155,7 @@ router.get('/event/:eventId', adminAuth, async (req, res) => {
 
     let attendance = await Attendance.find(filter)
       .populate('user_id', 'name email roll_no trade')
+      .populate('event_id', 'title event_type date time location')
       .populate('verified_by', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -164,9 +174,25 @@ router.get('/event/:eventId', adminAuth, async (req, res) => {
     // Get attendance statistics for this event
     const stats = await Attendance.getStats({ event_id: eventId });
 
+    // Flatten for client and include admin/verifier name snapshot
+    const flattened = attendance.map((r) => ({
+      id: r._id,
+      studentName: r.user_id?.name || '',
+      studentId: r.user_id?.roll_no || '',
+      email: r.user_id?.email || '',
+      department: r.user_id?.trade || '',
+      status: r.status,
+      eventName: r.event_id?.title || '',
+      date: r.event_id?.date || '',
+      attendanceTime: r.event_id?.time || '',
+      verifiedByName: r.verified_by_snapshot?.name || r.verified_by?.name || '',
+      verifiedByEmail: r.verified_by_snapshot?.email || r.verified_by?.email || '',
+      createdAt: r.createdAt
+    }));
+
     res.json({
       success: true,
-      attendance: attendance,
+      attendance: flattened,
       pagination: {
         current: parseInt(page),
         total: Math.ceil(total / limit),
@@ -231,7 +257,7 @@ router.get('/report', adminAuth, async (req, res) => {
 
     const total = await Attendance.countDocuments(filter);
 
-    // Flatten for client consumption
+    // Flatten for client consumption (include verifier/admin name)
     const flattened = attendance.map((r) => ({
       _id: r._id,
       studentName: r.user_id?.name || '',
@@ -243,6 +269,7 @@ router.get('/report', adminAuth, async (req, res) => {
       status: r.status,
       eventType: r.event_id?.event_type || '',
       createdAt: r.createdAt,
+      verifiedByName: r.verified_by_snapshot?.name || r.verified_by?.name || ''
     }));
 
     // Get overall statistics
@@ -308,7 +335,6 @@ router.get('/report/pdf', adminAuth, async (req, res) => {
     }
 
     // Generate PDF
-    const PDFDocument = require('pdfkit');
     const doc = new PDFDocument();
 
     // Set response headers

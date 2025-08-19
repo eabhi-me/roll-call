@@ -145,18 +145,31 @@ const AttendanceReport = ({ user, onLogout }) => {
 
   const handleGeneratePDF = async () => {
     try {
-      // Simulate PDF generation
       toast.loading('Generating PDF report...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.dismiss();
-      toast.success('PDF report generated successfully!');
-      
-      // Simulate download
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/attendance/report/pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      if (!res.ok) {
+        toast.dismiss();
+        return toast.error('Failed to generate PDF');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = '#';
+      link.href = url;
       link.download = 'attendance-report.pdf';
+      document.body.appendChild(link);
       link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success('PDF downloaded');
     } catch (error) {
+      toast.dismiss();
       toast.error('Failed to generate PDF report');
     }
   };
@@ -267,6 +280,9 @@ const AttendanceReport = ({ user, onLogout }) => {
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-900">{record.studentName}</h4>
                       <p className="text-xs text-gray-500">Roll No: {record.studentId}</p>
+                      {record.verifiedByName && (
+                        <p className="text-xs text-gray-500">Verified by: {record.verifiedByName}</p>
+                      )}
                       <p className="text-xs text-gray-500 mb-1">Trade: {(record.trade || record.user_id?.trade || '').split(' ')[0] || 'N/A'}</p>
                       <p className="text-sm text-gray-700">Event: {record.eventName}</p>
                       <p className="text-xs text-gray-500 flex items-center mt-1">
@@ -301,6 +317,7 @@ const AttendanceReport = ({ user, onLogout }) => {
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trade</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Verified By</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   </tr>
                 </thead>
@@ -314,6 +331,7 @@ const AttendanceReport = ({ user, onLogout }) => {
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {record.date}{record.attendanceTime ? ` • ${record.attendanceTime}` : ''}
                       </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{record.verifiedByName || '—'}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center">
                           <span className={`mr-2 ${getStatusColor(record.status)}`}>

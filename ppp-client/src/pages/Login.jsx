@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, GraduationCap } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../services/api';
 
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Login = ({ onLogin }) => {
     try {
       // Test backend connection first
       try {
-        const testResponse = await fetch('http://localhost:5000/api/test-cors', {
+        const testResponse = await fetch(`${API_BASE_URL}/test-cors`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ const Login = ({ onLogin }) => {
         console.log('Backend connection test successful');
       } catch (testError) {
         console.error('Backend connection test error:', testError);
-        toast.error('Cannot connect to server. Please check if the backend is running on port 5000.');
+        toast.error('Cannot connect to server. Please check if the backend is running.');
         setLoading(false);
         return;
       }
@@ -46,7 +47,7 @@ const Login = ({ onLogin }) => {
       console.log('Attempting login with email:', data.email);
 
       // Make API call to backend
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

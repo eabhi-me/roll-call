@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../services/api';
 import jsQR from 'jsqr';
 
 const QRScanner = () => {
@@ -41,6 +42,8 @@ const QRScanner = () => {
   const [lastScanTime, setLastScanTime] = useState(null);
   const [scanningStatus, setScanningStatus] = useState('idle'); // idle, scanning, detected
   const [scannedQRData, setScannedQRData] = useState('');
+  const [availableCameras, setAvailableCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState(null);
 
   // Start camera
   const startCamera = async () => {
@@ -49,35 +52,111 @@ const QRScanner = () => {
       setIsScanning(true);
       setScanningStatus('scanning');
 
-      // Try different camera constraints for better compatibility
-      const constraints = {
-        video: {
-          facingMode: 'environment', // Use back camera on mobile
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          aspectRatio: { ideal: 16/9 }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Camera API not available in this browser or insecure context');
+        setIsScanning(false);
+        setScanningStatus('idle');
+        return;
+      }
+
+      // Ensure devices are listed after permissions
+      const refreshDevices = async () => {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const cameras = devices.filter(d => d.kind === 'videoinput');
+          setAvailableCameras(cameras);
+          // If no selection yet, prefer a back/environment camera when available
+          if (!selectedCameraId && cameras.length > 0) {
+            const environmentCam = cameras.find(c => /back|rear|environment/i.test(`${c.label}`));
+            setSelectedCameraId((environmentCam || cameras[0]).deviceId);
+          }
+        } catch (e) {
+          // ignore enumerate errors
         }
       };
 
+      // Stop any existing stream first
+      stopCamera();
       let stream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        // Prefer explicitly selected camera if available
+        if (selectedCameraId) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: { exact: selectedCameraId },
+              width: { ideal: 1920, min: 640 },
+              height: { ideal: 1080, min: 480 },
+              aspectRatio: { ideal: 16 / 9 }
+            }
+          });
+        } else {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1920, min: 640 },
+              height: { ideal: 1080, min: 480 },
+              aspectRatio: { ideal: 16 / 9 }
+            }
+          });
+        }
       } catch (error) {
         // Fallback to basic constraints if advanced ones fail
         console.log('Advanced constraints failed, trying basic constraints');
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
-        });
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: { ideal: 'environment' } } 
+          });
+        } catch (fallbackError) {
+          console.log('Basic constraints failed, trying generic video:true');
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        }
       }
 
       streamRef.current = stream;
       
       if (videoRef.current) {
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('muted', 'true');
+        videoRef.current.setAttribute('autoplay', 'true');
+        videoRef.current.muted = true;
         videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          setIsCameraActive(true);
-          startQRDetection();
+
+        // Show the video container immediately
+        setIsCameraActive(true);
+        startQRDetection();
+
+        const onLoadedData = async () => {
+          try {
+            await videoRef.current.play();
+            await refreshDevices();
+          } catch (playError) {
+            console.error('Video play error:', playError);
+            setCameraError(playError.message);
+            setIsScanning(false);
+            setScanningStatus('idle');
+          }
+        };
+
+        const onPlaying = () => {
+          setScanningStatus('scanning');
+        };
+
+        videoRef.current.addEventListener('loadeddata', onLoadedData, { once: true });
+        videoRef.current.addEventListener('playing', onPlaying);
+
+        // Timeout if no frames start
+        setTimeout(() => {
+          const v = videoRef.current;
+          if (v && streamRef.current && (v.videoWidth === 0 || v.videoHeight === 0)) {
+            setCameraError('Camera did not start. Try switching camera or check permissions.');
+            setIsScanning(false);
+            setScanningStatus('idle');
+          }
+        }, 3000);
+
+        videoRef.current.onerror = (e) => {
+          console.error('Video element error:', e);
+          setCameraError('Video element error. Try switching camera or reloading the page.');
         };
       }
     } catch (error) {
@@ -104,6 +183,14 @@ const QRScanner = () => {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      try {
+        videoRef.current.pause();
+      } catch {}
+      videoRef.current.removeAttribute('srcObject');
+      // For Safari compatibility
+      videoRef.current.srcObject = null;
+    }
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
@@ -115,10 +202,14 @@ const QRScanner = () => {
 
   // Start QR detection loop
   const startQRDetection = () => {
-    if (!isCameraActive) return;
+    // Start detection regardless of state flag; guard inside loop
     
     const detectQR = () => {
-      if (!videoRef.current || !canvasRef.current || !isCameraActive) return;
+      if (!videoRef.current || !canvasRef.current) return;
+      if (!isCameraActive) {
+        animationFrameRef.current = requestAnimationFrame(detectQR);
+        return;
+      }
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -206,7 +297,7 @@ const QRScanner = () => {
       console.log('Sending QR data to backend:', parsedData);
       
       // Fetch user details from backend
-      const response = await fetch('http://localhost:5000/api/qr/scan', {
+      const response = await fetch(`${API_BASE_URL}/qr/scan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -289,6 +380,15 @@ const QRScanner = () => {
     };
   }, []);
 
+  // If user changes camera selection while active, restart stream with new device
+  useEffect(() => {
+    if (isCameraActive && selectedCameraId) {
+      stopCamera();
+      startCamera();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCameraId]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -331,7 +431,7 @@ const QRScanner = () => {
             </p>
 
             {/* Camera View */}
-            <div className="relative w-80 h-80 mx-auto mb-8 border-4 border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+            <div className="relative w-full max-w-3xl mx-auto mb-8 rounded-xl overflow-hidden bg-black h-[60vh] sm:h-[70vh]">
               {cameraError ? (
                 <div className="flex flex-col items-center justify-center h-full p-4">
                   <WifiOff className="w-12 h-12 text-red-400 mb-4" />
@@ -348,7 +448,7 @@ const QRScanner = () => {
                 <div className="relative h-full">
                   <video
                     ref={videoRef}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain bg-black"
                     autoPlay
                     playsInline
                     muted
@@ -361,7 +461,7 @@ const QRScanner = () => {
                   {/* Scanning overlay */}
                   <div className={`absolute inset-0 border-2 rounded-lg ${
                     scanningStatus === 'detected' 
-                      ? 'border-green-500 bg-green-500 bg-opacity-20' 
+                      ? 'border-green-500' 
                       : 'border-blue-500 animate-pulse'
                   }`}>
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white rounded-md">
@@ -409,7 +509,7 @@ const QRScanner = () => {
             </div>
 
             {/* Camera Controls */}
-            <div className="flex justify-center space-x-4 mb-6">
+            <div className="flex flex-col items-center space-y-3 mb-6">
               {!isCameraActive ? (
                 <button
                   onClick={startCamera}
@@ -428,7 +528,20 @@ const QRScanner = () => {
                   <span>Stop Camera</span>
                 </button>
               )}
-           
+              {availableCameras.length > 1 && (
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-600">Camera:</label>
+                  <select
+                    value={selectedCameraId || ''}
+                    onChange={(e) => setSelectedCameraId(e.target.value)}
+                    className="p-2 border border-gray-300 rounded-md text-sm"
+                  >
+                    {availableCameras.map(cam => (
+                      <option key={cam.deviceId} value={cam.deviceId}>{cam.label || 'Camera'}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             

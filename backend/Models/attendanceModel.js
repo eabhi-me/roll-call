@@ -20,6 +20,11 @@ const attendanceSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  // Snapshot of admin details at the time of verification (denormalized for history)
+  verified_by_snapshot: {
+    name: { type: String },
+    email: { type: String }
   }
 }, {
   timestamps: true

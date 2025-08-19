@@ -46,6 +46,7 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const [events, setEvents] = useState([]);
   const [recentAttendance, setRecentAttendance] = useState([]);
+  const [recentMarkedNames, setRecentMarkedNames] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -92,6 +93,21 @@ const AdminDashboard = ({ user, onLogout }) => {
       if (attendanceStatsResponse.success) {
         const stats = attendanceStatsResponse.data;
         setRecentAttendance(stats.recentAttendance || []);
+        // Compute last 4 names marked by this admin
+        try {
+          const myId = user._id || user.id;
+          const markedByMe = (stats.recentAttendance || [])
+            .filter((r) => {
+              const verifierId = r?.verified_by?._id || r?.verified_by?.id || r?.verified_by;
+              return verifierId && myId && String(verifierId) === String(myId);
+            })
+            .slice(0, 4)
+            .map((r) => r?.user_id?.name || 'Unknown');
+          setRecentMarkedNames(markedByMe);
+        } catch (e) {
+          console.warn('Failed to compute recentMarkedNames', e);
+          setRecentMarkedNames([]);
+        }
         
         setStats(prevStats => ({
           ...prevStats,
@@ -227,9 +243,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       }`}>
         <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-              <QrCode className="w-4 h-4 text-white" />
-            </div>
+            
             <span className="text-sm font-bold text-gray-900">TNP Admin</span>
           </div>
           <button
@@ -302,9 +316,6 @@ const AdminDashboard = ({ user, onLogout }) => {
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <QrCode className="w-4 h-4 text-white" />
-                </div>
                 <h1 className="text-lg font-bold text-gray-900">TNP Admin Dashboard</h1>
               </div>
               
@@ -561,28 +572,21 @@ const AdminDashboard = ({ user, onLogout }) => {
                   </div>
                 </div>
 
-                {/* Recent Attendance */}
+                {/* Recent Attendance (Last 4 marked by you) */}
                 <div className="bg-white rounded-md border border-gray-200 p-4">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Recent Attendance</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Last 4 Marked (You)</h3>
                   <div className="space-y-2">
-                    {recentAttendance.map((record, idx) => (
-                      <div key={record._id || record.id || `${record.studentName}-${record.event}-${idx}`} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                        <div>
-                          <p className="text-xs font-medium text-gray-900">{record.studentName}</p>
-                          <p className="text-xs text-gray-500">{record.event}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-gray-500">{record.time}</p>
-                          <div className="flex items-center">
-                            {record.status === 'present' ? (
-                              <CheckCircle className="w-3 h-3 text-green-600" />
-                            ) : (
-                              <XCircle className="w-3 h-3 text-red-600" />
-                            )}
+                    {recentMarkedNames.length > 0 ? (
+                      recentMarkedNames.map((name, idx) => (
+                        <div key={`${name}-${idx}`} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                          <div>
+                            <p className="text-xs font-medium text-gray-900">{name}</p>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-500">No recent attendance marked by you</p>
+                    )}
                   </div>
                 </div>
 
