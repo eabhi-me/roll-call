@@ -107,8 +107,13 @@ const QRScanner = () => {
             video: { facingMode: { ideal: 'environment' } } 
           });
         } catch (fallbackError) {
-          console.log('Basic constraints failed, trying generic video:true');
-          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          console.log('Basic constraints failed, trying front camera');
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' } } });
+          } catch (finalError) {
+            console.log('Front camera failed, trying generic video:true');
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          }
         }
       }
 
@@ -116,6 +121,7 @@ const QRScanner = () => {
       
       if (videoRef.current) {
         videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
         videoRef.current.setAttribute('muted', 'true');
         videoRef.current.setAttribute('autoplay', 'true');
         videoRef.current.muted = true;
