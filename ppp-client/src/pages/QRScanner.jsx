@@ -51,6 +51,7 @@ const QRScanner = () => {
   const [constraintsUsed, setConstraintsUsed] = useState(null);
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [manualQrInput, setManualQrInput] = useState('');
 
   // Start camera
   const startCamera = async () => {
@@ -288,11 +289,9 @@ const QRScanner = () => {
     detectQR();
   };
 
-  // Handle QR code detection
   const handleQRDetected = (qrData) => {
     console.log('QR Code detected, processing:', qrData);
     
-    // Prevent multiple scans in quick succession
     const now = Date.now();
     if (lastScanTime && now - lastScanTime < 2000) {
       console.log('Scan too soon, ignoring');
@@ -305,7 +304,7 @@ const QRScanner = () => {
     processQRData(qrData);
   };
 
-  // Process QR data
+  
   const processQRData = async (qrData) => {
     console.log('Processing QR data:', qrData);
     setIsProcessing(true);
@@ -314,7 +313,7 @@ const QRScanner = () => {
     try {
       let parsedData;
       
-      // Try to parse QR data as JSON
+      
       try {
         parsedData = typeof qrData === 'string' ? JSON.parse(qrData) : qrData;
         console.log('Parsed QR data:', parsedData);
@@ -329,7 +328,7 @@ const QRScanner = () => {
         };
       }
 
-      // Validate QR data structure
+      
       if (!parsedData.userId && !parsedData.rollNo) {
         throw new Error('Invalid QR code format - missing user ID or roll number');
       }
@@ -613,6 +612,36 @@ const QRScanner = () => {
                 </div>
               </div>
             )}
+
+            {/* Manual QR input */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-md">
+              <div className="text-left mb-2 text-sm font-medium text-gray-700">Manual QR Input (fallback)</div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (manualQrInput.trim()) {
+                    processQRData(manualQrInput.trim());
+                  }
+                }}
+                className="flex flex-col sm:flex-row gap-2"
+              >
+                <input
+                  type="text"
+                  value={manualQrInput}
+                  onChange={(e) => setManualQrInput(e.target.value)}
+                  placeholder='Paste QR data (JSON or roll no/user id)'
+                  className="flex-1 p-2 border border-gray-300 rounded-md text-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={isProcessing || !manualQrInput.trim()}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md text-sm disabled:opacity-50"
+                >
+                  Process
+                </button>
+              </form>
+              <div className="mt-1 text-xs text-gray-500 text-left">For testing or when the camera isn’t available.</div>
+            </div>
             {/* Scanning Stats */}
             {scanAttempts > 0 && (
               <div className="mb-6 p-3 bg-blue-50 rounded-md">
