@@ -22,10 +22,6 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'http://localhost:5173',  // Vite dev server
-      'http://localhost:3000',  // React dev server
-      'http://127.0.0.1:5173',  // Alternative localhost
-      'http://127.0.0.1:3000',  // Alternative localhost
       process.env.FRONTEND_URL  // From environment variable
     ].filter(Boolean); // Remove undefined values
     
