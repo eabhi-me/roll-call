@@ -21,7 +21,6 @@ const attendanceSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  // Snapshot of admin details at the time of verification (denormalized for history)
   verified_by_snapshot: {
     name: { type: String },
     email: { type: String }
@@ -30,14 +29,12 @@ const attendanceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Method to mark attendance
 attendanceSchema.methods.markAttendance = function(status, verifiedBy) {
   this.status = status;
   this.verified_by = verifiedBy;
   return this.save();
 };
 
-// Static method to get attendance statistics
 attendanceSchema.statics.getStats = async function(filters = {}) {
   const pipeline = [
     { $match: { ...filters } },

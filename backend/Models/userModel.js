@@ -65,7 +65,6 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for better performance (removed duplicates)
 userSchema.index({ role: 1 });
 userSchema.index({ trade: 1 });
 userSchema.index({ department: 1 });

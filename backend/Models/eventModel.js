@@ -18,7 +18,7 @@ const eventSchema = new mongoose.Schema({
     required: true
   },
   date: {
-    type: String, // YYYY-MM-DD format
+    type: String,
     required: true
   },
   time: {
@@ -49,7 +49,6 @@ const eventSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Method to update attendee count
 eventSchema.methods.updateAttendeeCount = async function() {
   const Attendance = mongoose.model('Attendance');
   const presentCount = await Attendance.countDocuments({
@@ -60,7 +59,6 @@ eventSchema.methods.updateAttendeeCount = async function() {
   return this.save();
 };
 
-// Indexes for better performance
 eventSchema.index({ date: 1 });
 eventSchema.index({ event_type: 1 });
 eventSchema.index({ createdBy: 1 });
