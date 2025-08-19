@@ -127,6 +127,36 @@ router.get('/upcoming', async (req, res) => {
   }
 });
 
+// Get Active Events (running now)
+router.get('/active', async (req, res) => {
+  try {
+    const now = new Date();
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Time window: allow events starting within the last 30 minutes and up to 3 hours ahead
+    const beforeMinutes = 30;
+    const afterMinutes = 180;
+
+    const eventsToday = await Event.find({ isActive: true, date: todayStr })
+      .populate('createdBy', 'name email')
+      .sort({ time: 1 });
+
+    const active = eventsToday.filter(ev => {
+      if (!ev.time) return false;
+      const [hh, mm] = String(ev.time).split(':');
+      const start = new Date(now);
+      start.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
+      const diffMinutes = (start.getTime() - now.getTime()) / 60000;
+      return diffMinutes >= -beforeMinutes && diffMinutes <= afterMinutes;
+    });
+
+    res.json({ success: true, events: active, count: active.length });
+  } catch (error) {
+    console.error('Get active events error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get Event by ID
 router.get('/:id', async (req, res) => {
   try {

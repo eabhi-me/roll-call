@@ -25,6 +25,27 @@ router.post('/mark', adminAuth, validateAttendanceMarking, async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Enforce active event time window to prevent proxy attendance
+    try {
+      const now = new Date();
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (String(event.date) !== todayStr) {
+        return res.status(400).json({ error: 'Event is not active (wrong date)' });
+      }
+      if (!event.time) {
+        return res.status(400).json({ error: 'Event time not set' });
+      }
+      const [hh, mm] = String(event.time).split(':');
+      const start = new Date(now);
+      start.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
+      const diffMinutes = (start.getTime() - now.getTime()) / 60000;
+      const beforeMinutes = 30; // allow late/early threshold
+      const afterMinutes = 180;
+      if (!(diffMinutes >= -beforeMinutes && diffMinutes <= afterMinutes)) {
+        return res.status(400).json({ error: 'Event is not currently active' });
+      }
+    } catch {}
+
     // Check if attendance already exists for this user and event
     const existingAttendance = await Attendance.findOne({
       user_id: userId,

@@ -52,6 +52,11 @@ const QRScanner = () => {
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [manualQrInput, setManualQrInput] = useState('');
+  // Inline attendance marking
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState('');
+  const [attendanceStatus, setAttendanceStatus] = useState('present');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Start camera
   const startCamera = async () => {
@@ -431,6 +436,71 @@ const QRScanner = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCameraId]);
 
+  // Fetch active events once student details are available
+  useEffect(() => {
+    const fetchActiveEvents = async () => {
+      try {
+        let resp = await fetch(`${API_BASE_URL}/events/active`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        let data = await resp.json();
+        if (!resp.ok || !Array.isArray(data.events)) {
+          // Fallback to upcoming if active not available
+          resp = await fetch(`${API_BASE_URL}/events/upcoming`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          data = await resp.json();
+        }
+        if (Array.isArray(data.events)) setEvents(data.events);
+      } catch (e) {
+        // ignore
+      }
+    };
+    if (userDetails) {
+      fetchActiveEvents();
+    }
+  }, [userDetails]);
+
+  const markAttendance = async () => {
+    if (!userDetails || !selectedEvent) {
+      toast.error(!selectedEvent ? 'Please select an event' : 'No user to mark');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/attendance/mark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          userId: userDetails._id || userDetails.id,
+          eventId: selectedEvent,
+          status: attendanceStatus
+        })
+      });
+      const result = await resp.json();
+      if (resp.ok) {
+        toast.success('Attendance marked successfully');
+      } else {
+        toast.error(result.error || 'Failed to mark attendance');
+      }
+    } catch (err) {
+      toast.error('Failed to mark attendance');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -752,28 +822,72 @@ const QRScanner = () => {
               )}
             </div>
 
-            {/* Action Buttons */}
+            {/* Inline Event Selection & Marking */}
             {userDetails && (
-              <div className="bg-white border border-gray-200 rounded-md p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Next Steps</h3>
-                
-                <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+              <div className="bg-white border border-gray-200 rounded-md p-6 space-y-6">
+                <div className="bg-green-50 border border-green-200 rounded-md p-4">
                   <div className="flex items-center space-x-2 text-green-800">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">Student verified successfully!</span>
                   </div>
                   <p className="text-green-700 mt-2">
-                    Click the button below to proceed to attendance marking.
+                    Select an event and status to mark attendance.
                   </p>
                 </div>
 
-                <div className="flex space-x-4">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Event</label>
+                    <select
+                      value={selectedEvent}
+                      onChange={(e) => setSelectedEvent(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Choose an event…</option>
+                      {events.map((ev) => (
+                        <option key={ev._id || ev.id} value={ev._id || ev.id}>
+                          {ev.title} — {ev.date} {ev.time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedEvent && (
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">Attendance Status</label>
+                      <div className="flex items-center gap-6">
+                        <label className="inline-flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="attendanceStatus"
+                            value="present"
+                            checked={attendanceStatus === 'present'}
+                            onChange={(e) => setAttendanceStatus(e.target.value)}
+                          />
+                          <span>Present</span>
+                        </label>
+                        <label className="inline-flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="attendanceStatus"
+                            value="absent"
+                            checked={attendanceStatus === 'absent'}
+                            onChange={(e) => setAttendanceStatus(e.target.value)}
+                          />
+                          <span>Absent</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-4">
                   <button
-                    onClick={goToAttendanceMarking}
-                    className="flex-1 bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                    onClick={markAttendance}
+                    disabled={!selectedEvent || isSubmitting}
+                    className="flex-1 bg-green-600 text-white py-3 rounded-md font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
-                    <Calendar className="w-5 h-5" />
-                    <span>Mark Attendance</span>
+                    {isSubmitting ? 'Marking…' : 'Mark Attendance'}
                   </button>
                   <button
                     onClick={resetScanner}
