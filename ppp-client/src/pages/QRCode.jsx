@@ -11,7 +11,7 @@ import {
   Info
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import QRCodeReact from 'qrcode.react';
+import QRCode from 'react-qr-code';
 import toast from 'react-hot-toast';
 import { qrAPI } from '../services/api';
 
@@ -210,12 +210,10 @@ const QRCodePage = ({ user, onLogout }) => {
               <div className="flex justify-center mb-6">
                 <div className="bg-white p-4 rounded-md border-2 border-gray-200">
                   {qrValue ? (
-                    <QRCodeReact
+                    <QRCode
                       value={qrValue}
                       size={200}
                       level="H"
-                      includeMargin={true}
-                      renderAs="canvas"
                     />
                   ) : (
                     <div className="w-[200px] h-[200px] bg-gray-100 rounded-lg flex items-center justify-center">
