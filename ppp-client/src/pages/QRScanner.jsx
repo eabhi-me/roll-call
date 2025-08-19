@@ -133,6 +133,13 @@ const QRScanner = () => {
       }
 
       streamRef.current = stream;
+      // Enumerate devices immediately to surface available cameras
+      try {
+        await refreshDevices();
+        if (availableCameras.length === 0) {
+          setLastError('No cameras detected after permission');
+        }
+      } catch {}
       
       if (videoRef.current) {
         videoRef.current.setAttribute('playsinline', 'true');
