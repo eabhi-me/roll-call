@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../services/api';
 import jsQR from 'jsqr';
+import { QrReader } from 'react-qr-reader';
 
 const QRScanner = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const QRScanner = () => {
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [manualQrInput, setManualQrInput] = useState('');
+  const [qrReaderActive, setQrReaderActive] = useState(true);
   // Inline attendance marking
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
@@ -542,113 +544,59 @@ const QRScanner = () => {
               Position the student's QR code within the camera view to scan and verify their attendance.
             </p>
 
-            {/* Camera View */}
+            {/* Camera View (react-qr-reader) */}
             <div className="relative w-full max-w-3xl mx-auto mb-8 rounded-xl overflow-hidden bg-black h-[60vh] sm:h-[70vh]">
               {cameraError ? (
                 <div className="flex flex-col items-center justify-center h-full p-4">
                   <WifiOff className="w-12 h-12 text-red-400 mb-4" />
                   <p className="text-red-600 text-sm mb-2">Camera Error</p>
                   <p className="text-gray-500 text-xs text-center">{cameraError}</p>
-                  <button
-                    onClick={startCamera}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-                  >
-                    Retry Camera
-                  </button>
                 </div>
-              ) : isCameraActive ? (
-                <div className="relative h-full">
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-contain bg-black"
-                    autoPlay
-                    playsInline
-                    muted
+              ) : qrReaderActive ? (
+                <>
+                  <QrReader
+                    constraints={{ facingMode: 'environment' }}
+                    scanDelay={250}
+                    onResult={(result, error) => {
+                      if (result) {
+                        const text = result?.text || (result?.getText && result.getText()) || '';
+                        const now = Date.now();
+                        if (text && now - (lastDetectionAt ? Date.parse(lastDetectionAt) : 0) > 1500) {
+                          setLastDetectionAt(new Date().toISOString());
+                          processQRData(text);
+                        }
+                      }
+                    }}
+                    containerStyle={{ width: '100%', height: '100%' }}
+                    videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <canvas
-                    ref={canvasRef}
-                    className="absolute top-0 left-0 w-full h-full opacity-0"
-                  />
-                  
-                  {/* Scanning overlay */}
-                  <div className={`absolute inset-0 border-2 rounded-lg ${
-                    scanningStatus === 'detected' 
-                      ? 'border-green-500' 
-                      : 'border-blue-500 animate-pulse'
-                  }`}>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white rounded-md">
-                      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-500"></div>
-                      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-500"></div>
-                      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-500"></div>
-                      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-500"></div>
-                    </div>
-                    
-                    {/* Scanning line animation */}
-                    {scanningStatus === 'scanning' && (
-                      <div className="absolute top-1/2 left-0 w-full h-0.5 bg-blue-500 animate-pulse">
-                        <div className="w-full h-full bg-blue-500 animate-ping"></div>
-                      </div>
-                    )}
-                    
-                    {/* Status indicator */}
-                    {scanningStatus === 'detected' && (
-                      <div className="absolute top-4 right-4 bg-green-500 text-white px-2 py-1 rounded text-xs animate-bounce">
-                        QR Detected!
-                      </div>
-                    )}
-                    
-                    {/* Scanning text */}
-                    {scanningStatus === 'scanning' && (
-                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
-                        Scanning...
-                      </div>
-                    )}
+                  {/* Overlay */}
+                  <div className="pointer-events-none absolute inset-0 border-2 border-blue-500 rounded-lg">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white rounded-md"></div>
                   </div>
-                </div>
-              ) : isScanning ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                  <p className="text-gray-500 mb-2">Starting Camera...</p>
-                  <p className="text-sm text-gray-400 text-center">Please wait</p>
-                </div>
+                </>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Camera className="w-16 h-16 text-gray-400 mb-4" />
-                  <p className="text-gray-500 mb-2">Camera Ready</p>
-                  <p className="text-sm text-gray-400 text-center">Click start to begin scanning</p>
-                </div>
+                <div className="flex items-center justify-center h-full text-white text-sm">Camera paused</div>
               )}
             </div>
 
             {/* Camera Controls */}
             <div className="flex flex-col items-center space-y-3 mb-6">
-              <div className="flex items-center space-x-3">
-                <label className="inline-flex items-center text-sm text-gray-600">
-                  <input
-                    type="checkbox"
-                    className="mr-2"
-                    checked={debugEnabled}
-                    onChange={(e) => setDebugEnabled(e.target.checked)}
-                  />
-                  Debug mode
-                </label>
-              </div>
-              {!isCameraActive ? (
+              {!qrReaderActive ? (
                 <button
-                  onClick={startCamera}
-                  disabled={isScanning}
+                  onClick={() => setQrReaderActive(true)}
                   className="bg-blue-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <Camera className="w-5 h-5" />
-                  <span>Start Camera</span>
+                  <span>Resume Camera</span>
                 </button>
               ) : (
                 <button
-                  onClick={stopCamera}
+                  onClick={() => setQrReaderActive(false)}
                   className="bg-red-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center space-x-2"
                 >
                   <XCircle className="w-5 h-5" />
-                  <span>Stop Camera</span>
+                  <span>Pause Camera</span>
                 </button>
               )}
               {availableCameras.length > 1 && (

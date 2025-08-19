@@ -18,6 +18,7 @@
     "react-qr-code": "^2.0.15",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-qr-reader": "^3.0.0",
     "react-hook-form": "^7.53.2",
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.28.0",
