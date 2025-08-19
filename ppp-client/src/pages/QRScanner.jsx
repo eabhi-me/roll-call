@@ -44,6 +44,13 @@ const QRScanner = () => {
   const [scannedQRData, setScannedQRData] = useState('');
   const [availableCameras, setAvailableCameras] = useState([]);
   const [selectedCameraId, setSelectedCameraId] = useState(null);
+  const [debugEnabled, setDebugEnabled] = useState(false);
+  const [framesScanned, setFramesScanned] = useState(0);
+  const [lastDetectionAt, setLastDetectionAt] = useState(null);
+  const [lastError, setLastError] = useState(null);
+  const [constraintsUsed, setConstraintsUsed] = useState(null);
+  const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   // Start camera
   const startCamera = async () => {
@@ -81,38 +88,46 @@ const QRScanner = () => {
       try {
         // Prefer explicitly selected camera if available
         if (selectedCameraId) {
-          stream = await navigator.mediaDevices.getUserMedia({
+          const constraints = {
             video: {
               deviceId: { exact: selectedCameraId },
               width: { ideal: 1920, min: 640 },
               height: { ideal: 1080, min: 480 },
               aspectRatio: { ideal: 16 / 9 }
             }
-          });
+          };
+          setConstraintsUsed(constraints);
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
         } else {
-          stream = await navigator.mediaDevices.getUserMedia({
+          const constraints = {
             video: {
               facingMode: { ideal: 'environment' },
               width: { ideal: 1920, min: 640 },
               height: { ideal: 1080, min: 480 },
               aspectRatio: { ideal: 16 / 9 }
             }
-          });
+          };
+          setConstraintsUsed(constraints);
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
         }
       } catch (error) {
         // Fallback to basic constraints if advanced ones fail
         console.log('Advanced constraints failed, trying basic constraints');
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: { ideal: 'environment' } } 
-          });
+          const constraints = { video: { facingMode: { ideal: 'environment' } } };
+          setConstraintsUsed(constraints);
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
         } catch (fallbackError) {
           console.log('Basic constraints failed, trying front camera');
           try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' } } });
+            const constraints = { video: { facingMode: { ideal: 'user' } } };
+            setConstraintsUsed(constraints);
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
           } catch (finalError) {
             console.log('Front camera failed, trying generic video:true');
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const constraints = { video: true };
+            setConstraintsUsed(constraints);
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
           }
         }
       }
@@ -135,9 +150,11 @@ const QRScanner = () => {
           try {
             await videoRef.current.play();
             await refreshDevices();
+            setVideoSize({ width: videoRef.current.videoWidth, height: videoRef.current.videoHeight });
           } catch (playError) {
             console.error('Video play error:', playError);
             setCameraError(playError.message);
+            setLastError(playError.message);
             setIsScanning(false);
             setScanningStatus('idle');
           }
@@ -155,6 +172,7 @@ const QRScanner = () => {
           const v = videoRef.current;
           if (v && streamRef.current && (v.videoWidth === 0 || v.videoHeight === 0)) {
             setCameraError('Camera did not start. Try switching camera or check permissions.');
+            setLastError('No frames received');
             setIsScanning(false);
             setScanningStatus('idle');
           }
@@ -163,11 +181,13 @@ const QRScanner = () => {
         videoRef.current.onerror = (e) => {
           console.error('Video element error:', e);
           setCameraError('Video element error. Try switching camera or reloading the page.');
+          setLastError('Video element error');
         };
       }
     } catch (error) {
       console.error('Camera error:', error);
       setCameraError(error.message);
+      setLastError(error.message);
       setIsScanning(false);
       setScanningStatus('idle');
       
@@ -224,6 +244,14 @@ const QRScanner = () => {
       // Set canvas size to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      if (debugEnabled) {
+        if (video.videoWidth !== videoSize.width || video.videoHeight !== videoSize.height) {
+          setVideoSize({ width: video.videoWidth, height: video.videoHeight });
+        }
+        if (canvas.width !== canvasSize.width || canvas.height !== canvasSize.height) {
+          setCanvasSize({ width: canvas.width, height: canvas.height });
+        }
+      }
 
       // Draw video frame to canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -236,8 +264,10 @@ const QRScanner = () => {
         inversionAttempts: "dontInvert",
       });
 
+      setFramesScanned(prev => prev + 1);
       if (code) {
         console.log('QR Code detected:', code.data);
+        setLastDetectionAt(new Date().toISOString());
         handleQRDetected(code.data);
         return; // Stop scanning after successful detection
       }
@@ -516,6 +546,17 @@ const QRScanner = () => {
 
             {/* Camera Controls */}
             <div className="flex flex-col items-center space-y-3 mb-6">
+              <div className="flex items-center space-x-3">
+                <label className="inline-flex items-center text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={debugEnabled}
+                    onChange={(e) => setDebugEnabled(e.target.checked)}
+                  />
+                  Debug mode
+                </label>
+              </div>
               {!isCameraActive ? (
                 <button
                   onClick={startCamera}
@@ -550,9 +591,21 @@ const QRScanner = () => {
               )}
             </div>
 
-            
-            
-
+            {debugEnabled && (
+              <div className="mb-6 p-4 bg-gray-100 rounded-md text-left text-xs text-gray-700">
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="font-semibold">Media API:</span> {navigator.mediaDevices ? 'available' : 'missing'}</div>
+                  <div><span className="font-semibold">Frames scanned:</span> {framesScanned}</div>
+                  <div><span className="font-semibold">Video size:</span> {videoSize.width}x{videoSize.height}</div>
+                  <div><span className="font-semibold">Canvas size:</span> {canvasSize.width}x{canvasSize.height}</div>
+                  <div><span className="font-semibold">Cameras detected:</span> {availableCameras.length}</div>
+                  <div><span className="font-semibold">Selected camera:</span> {availableCameras.find(c=>c.deviceId===selectedCameraId)?.label || 'auto'}</div>
+                  <div className="col-span-2"><span className="font-semibold">Last detection:</span> {lastDetectionAt || '—'}</div>
+                  <div className="col-span-2"><span className="font-semibold">Last error:</span> {lastError || '—'}</div>
+                  <div className="col-span-2 overflow-auto"><span className="font-semibold">Constraints:</span> <pre className="whitespace-pre-wrap break-words">{constraintsUsed ? JSON.stringify(constraintsUsed) : '—'}</pre></div>
+                </div>
+              </div>
+            )}
             {/* Scanning Stats */}
             {scanAttempts > 0 && (
               <div className="mb-6 p-3 bg-blue-50 rounded-md">
