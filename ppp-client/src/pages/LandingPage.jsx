@@ -509,9 +509,6 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <QrCode className="w-5 h-5 text-white" />
-                </div>
                 <span className="text-lg sm:text-xl font-bold">RollCall</span>
               </div>
               <p className="text-sm sm:text-base text-gray-400">
@@ -535,16 +532,6 @@ const LandingPage = () => {
                 <li><Link to="/signup" className="hover:text-white transition-colors">Sign Up</Link></li>
                 <li><Link to="/profile" className="hover:text-white transition-colors">Profile</Link></li>
               </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Contact</h3>
-              <p className="text-sm sm:text-base text-gray-400">
-                TNP Department<br />
-                College Name<br />
-                Email: tnp@college.edu<br />
-                Phone: +91 1234567890
-              </p>
             </div>
           </div>
           
