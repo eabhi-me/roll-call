@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "clsx": "^2.1.1",
     "framer-motion": "^11.10.16",
+    "html5-qrcode": "^2.3.8",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.468.0",
     "react": "^19.1.1",

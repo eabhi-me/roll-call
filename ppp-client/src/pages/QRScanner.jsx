@@ -60,256 +60,330 @@ const QRScanner = () => {
   const [attendanceStatus, setAttendanceStatus] = useState('present');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Start camera
-  const startCamera = async () => {
-    try {
-      setCameraError(null);
-      setIsScanning(true);
-      setScanningStatus('scanning');
+  // Improved camera and QR detection implementation
 
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError('Camera API not available in this browser or insecure context');
-        setIsScanning(false);
-        setScanningStatus('idle');
-        return;
-      }
-
-      // Ensure devices are listed after permissions
-      const refreshDevices = async () => {
-        try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const cameras = devices.filter(d => d.kind === 'videoinput');
-          setAvailableCameras(cameras);
-          // If no selection yet, prefer a back/environment camera when available
-          if (!selectedCameraId && cameras.length > 0) {
-            const environmentCam = cameras.find(c => /back|rear|environment/i.test(`${c.label}`));
-            setSelectedCameraId((environmentCam || cameras[0]).deviceId);
-          }
-        } catch (e) {
-          // ignore enumerate errors
-        }
-      };
-
-      // Stop any existing stream first
-      stopCamera();
-      let stream;
-      try {
-        // Prefer explicitly selected camera if available
-        if (selectedCameraId) {
-          const constraints = {
-            video: {
-              deviceId: { exact: selectedCameraId },
-              width: { ideal: 1920, min: 640 },
-              height: { ideal: 1080, min: 480 },
-              aspectRatio: { ideal: 16 / 9 }
-            }
-          };
-          setConstraintsUsed(constraints);
-          stream = await navigator.mediaDevices.getUserMedia(constraints);
-        } else {
-          const constraints = {
-            video: {
-              facingMode: { ideal: 'environment' },
-              width: { ideal: 1920, min: 640 },
-              height: { ideal: 1080, min: 480 },
-              aspectRatio: { ideal: 16 / 9 }
-            }
-          };
-          setConstraintsUsed(constraints);
-          stream = await navigator.mediaDevices.getUserMedia(constraints);
-        }
-      } catch (error) {
-        // Fallback to basic constraints if advanced ones fail
-        console.log('Advanced constraints failed, trying basic constraints');
-        try {
-          const constraints = { video: { facingMode: { ideal: 'environment' } } };
-          setConstraintsUsed(constraints);
-          stream = await navigator.mediaDevices.getUserMedia(constraints);
-        } catch (fallbackError) {
-          console.log('Basic constraints failed, trying front camera');
-          try {
-            const constraints = { video: { facingMode: { ideal: 'user' } } };
-            setConstraintsUsed(constraints);
-            stream = await navigator.mediaDevices.getUserMedia(constraints);
-          } catch (finalError) {
-            console.log('Front camera failed, trying generic video:true');
-            const constraints = { video: true };
-            setConstraintsUsed(constraints);
-            stream = await navigator.mediaDevices.getUserMedia(constraints);
-          }
-        }
-      }
-
-      streamRef.current = stream;
-      // Enumerate devices immediately to surface available cameras
-      try {
-        await refreshDevices();
-        if (availableCameras.length === 0) {
-          setLastError('No cameras detected after permission');
-        }
-      } catch {}
-      
-      if (videoRef.current) {
-        videoRef.current.setAttribute('playsinline', 'true');
-        videoRef.current.setAttribute('webkit-playsinline', 'true');
-        videoRef.current.setAttribute('muted', 'true');
-        videoRef.current.setAttribute('autoplay', 'true');
-        videoRef.current.muted = true;
-        videoRef.current.srcObject = stream;
-
-        // Show the video container immediately
-        setIsCameraActive(true);
-        startQRDetection();
-
-        const onLoadedData = async () => {
-          try {
-            await videoRef.current.play();
-            await refreshDevices();
-            setVideoSize({ width: videoRef.current.videoWidth, height: videoRef.current.videoHeight });
-          } catch (playError) {
-            console.error('Video play error:', playError);
-            setCameraError(playError.message);
-            setLastError(playError.message);
-            setIsScanning(false);
-            setScanningStatus('idle');
-          }
-        };
-
-        const onPlaying = () => {
-          setScanningStatus('scanning');
-        };
-
-        videoRef.current.addEventListener('loadeddata', onLoadedData, { once: true });
-        videoRef.current.addEventListener('playing', onPlaying);
-
-        // Timeout if no frames start
-        setTimeout(() => {
-          const v = videoRef.current;
-          if (v && streamRef.current && (v.videoWidth === 0 || v.videoHeight === 0)) {
-            setCameraError('Camera did not start. Try switching camera or check permissions.');
-            setLastError('No frames received');
-            setIsScanning(false);
-            setScanningStatus('idle');
-          }
-        }, 3000);
-
-        videoRef.current.onerror = (e) => {
-          console.error('Video element error:', e);
-          setCameraError('Video element error. Try switching camera or reloading the page.');
-          setLastError('Video element error');
-        };
-      }
-    } catch (error) {
-      console.error('Camera error:', error);
-      setCameraError(error.message);
-      setLastError(error.message);
-      setIsScanning(false);
-      setScanningStatus('idle');
-      
-      if (error.name === 'NotAllowedError') {
-        toast.error('Camera access denied. Please allow camera permissions.');
-      } else if (error.name === 'NotFoundError') {
-        toast.error('No camera found on this device.');
-      } else if (error.name === 'NotSupportedError') {
-        toast.error('Camera not supported on this device.');
-      } else {
-        toast.error('Failed to start camera. Please try again.');
-      }
-    }
-  };
-
-  // Stop camera
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      try {
-        videoRef.current.pause();
-      } catch {}
-      videoRef.current.removeAttribute('srcObject');
-      // For Safari compatibility
-      videoRef.current.srcObject = null;
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    setIsCameraActive(false);
-    setIsScanning(false);
-    setScanningStatus('idle');
-  };
-
-  // Start QR detection loop
-  const startQRDetection = () => {
-    // Start detection regardless of state flag; guard inside loop
+// Start camera with better error handling and state management
+const startCamera = async () => {
+  try {
+    setCameraError(null);
+    setIsScanning(true);
+    setScanningStatus('scanning');
     
-    const detectQR = () => {
-      if (!videoRef.current || !canvasRef.current) return;
-      if (!isCameraActive) {
-        animationFrameRef.current = requestAnimationFrame(detectQR);
-        return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Camera API not available in this browser or insecure context');
+    }
+
+    // Stop any existing stream first
+    stopCamera();
+    
+    const stream = await getMediaStream();
+    streamRef.current = stream;
+    
+    if (videoRef.current) {
+      setupVideoElement(stream);
+      setIsCameraActive(true);
+      
+      // Wait for video to be ready before starting detection
+      await waitForVideoReady();
+      startQRDetection();
+    }
+    
+    // Refresh available cameras after getting stream
+    await refreshDevices();
+    
+  } catch (error) {
+    console.error('Camera error:', error);
+    handleCameraError(error);
+  }
+};
+
+// Simplified media stream acquisition with progressive fallback
+const getMediaStream = async () => {
+  const constraints = [
+    // Try selected camera first
+    selectedCameraId && {
+      video: {
+        deviceId: { exact: selectedCameraId },
+        width: { ideal: 1920, min: 640 },
+        height: { ideal: 1080, min: 480 },
+        aspectRatio: { ideal: 16 / 9 }
       }
-
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-
-      // Set canvas size to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      if (debugEnabled) {
-        if (video.videoWidth !== videoSize.width || video.videoHeight !== videoSize.height) {
-          setVideoSize({ width: video.videoWidth, height: video.videoHeight });
-        }
-        if (canvas.width !== canvasSize.width || canvas.height !== canvasSize.height) {
-          setCanvasSize({ width: canvas.width, height: canvas.height });
-        }
+    },
+    // Environment camera with high quality
+    {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920, min: 640 },
+        height: { ideal: 1080, min: 480 },
+        aspectRatio: { ideal: 16 / 9 }
       }
+    },
+    // Basic environment camera
+    { video: { facingMode: { ideal: 'environment' } } },
+    // Front camera fallback
+    { video: { facingMode: { ideal: 'user' } } },
+    // Generic video
+    { video: true }
+  ].filter(Boolean);
 
-      // Draw video frame to canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  let lastError;
+  for (const constraint of constraints) {
+    try {
+      setConstraintsUsed(constraint);
+      const stream = await navigator.mediaDevices.getUserMedia({video:true});
+      return stream;
+    } catch (error) {
+      lastError = error;
+      console.log(`Constraint failed:`, constraint, error.message);
+    }
+  }
+  
+  throw lastError || new Error('Failed to get media stream');
+};
 
-      // Get image data for QR detection
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+// Setup video element with proper attributes and event handlers
+const setupVideoElement = (stream) => {
+  const video = videoRef.current;
+  
+  // Set video attributes for mobile compatibility
+  video.setAttribute('playsinline', 'true');
+  video.setAttribute('webkit-playsinline', 'true');
+  video.setAttribute('muted', 'true');
+  video.setAttribute('autoplay', 'true');
+  video.muted = true;
+  video.srcObject = stream;
 
-      // Use jsQR to detect QR codes
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: "dontInvert",
-      });
+  // Setup event handlers
+  video.addEventListener('loadeddata', handleVideoLoadedData, { once: true });
+  video.addEventListener('playing', () => setScanningStatus('scanning'), { once: true });
+  video.addEventListener('error', handleVideoError);
+};
 
-      setFramesScanned(prev => prev + 1);
+// Wait for video to be ready with timeout
+const waitForVideoReady = () => {
+  return new Promise((resolve, reject) => {
+    const video = videoRef.current;
+    
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      resolve();
+      return;
+    }
+    
+    const checkReady = () => {
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        setVideoSize({ width: video.videoWidth, height: video.videoHeight });
+        resolve();
+      }
+    };
+    
+    video.addEventListener('loadeddata', checkReady, { once: true });
+    
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      video.removeEventListener('loadeddata', checkReady);
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        reject(new Error('Camera did not start - no video frames received'));
+      }
+    }, 5000);
+  });
+};
+
+// Handle video element events
+const handleVideoLoadedData = async () => {
+  try {
+    await videoRef.current.play();
+    setVideoSize({ 
+      width: videoRef.current.videoWidth, 
+      height: videoRef.current.videoHeight 
+    });
+  } catch (playError) {
+    console.error('Video play error:', playError);
+    throw playError;
+  }
+};
+
+const handleVideoError = (e) => {
+  console.error('Video element error:', e);
+  const error = new Error('Video element error - try switching camera or reloading');
+  handleCameraError(error);
+};
+
+// Refresh available cameras
+const refreshDevices = async () => {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cameras = devices.filter(d => d.kind === 'videoinput');
+    setAvailableCameras(cameras);
+    
+    // Auto-select environment camera if none selected
+    if (!selectedCameraId && cameras.length > 0) {
+      const environmentCam = cameras.find(c => 
+        /back|rear|environment/i.test(c.label)
+      );
+      setSelectedCameraId((environmentCam || cameras[0]).deviceId);
+    }
+    
+    if (cameras.length === 0) {
+      setLastError('No cameras detected after permission granted');
+    }
+  } catch (error) {
+    console.warn('Failed to enumerate devices:', error);
+  }
+};
+
+// Improved error handling
+const handleCameraError = (error) => {
+  setCameraError(error.message);
+  setLastError(error.message);
+  setIsScanning(false);
+  setScanningStatus('idle');
+  
+  // Show appropriate toast messages
+  const errorMessages = {
+    'NotAllowedError': 'Camera access denied. Please allow camera permissions.',
+    'NotFoundError': 'No camera found on this device.',
+    'NotSupportedError': 'Camera not supported on this device.',
+    'NotReadableError': 'Camera is already in use by another application.',
+    'OverconstrainedError': 'Camera constraints not supported.'
+  };
+  
+  const message = errorMessages[error.name] || 'Failed to start camera. Please try again.';
+  toast.error(message);
+};
+
+// Stop camera with proper cleanup
+const stopCamera = () => {
+  // Stop media stream
+  if (streamRef.current) {
+    streamRef.current.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+  }
+  
+  // Clean up video element
+  if (videoRef.current) {
+    const video = videoRef.current;
+    video.removeEventListener('loadeddata', handleVideoLoadedData);
+    video.removeEventListener('playing', () => setScanningStatus('scanning'));
+    video.removeEventListener('error', handleVideoError);
+    
+    try {
+      video.pause();
+      video.srcObject = null;
+    } catch (error) {
+      console.warn('Error cleaning up video element:', error);
+    }
+  }
+  
+  // Stop detection loop
+  if (animationFrameRef.current) {
+    cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = null;
+  }
+  
+  // Reset states
+  setIsCameraActive(false);
+  setIsScanning(false);
+  setScanningStatus('idle');
+};
+
+// Improved QR detection with better performance
+const startQRDetection = () => {
+  let frameCount = 0;
+  const DETECTION_INTERVAL = 3; // Process every 3rd frame for performance
+  
+  const detectQR = () => {
+    // Check if we should continue scanning
+    if (!isCameraActive || !videoRef.current || !canvasRef.current || !streamRef.current) {
+      return;
+    }
+    
+    frameCount++;
+    
+    // Skip frames for performance (process every nth frame)
+    if (frameCount % DETECTION_INTERVAL !== 0) {
+      animationFrameRef.current = requestAnimationFrame(detectQR);
+      return;
+    }
+    
+    try {
+      const code = processVideoFrame();
+      
       if (code) {
         console.log('QR Code detected:', code.data);
         setLastDetectionAt(new Date().toISOString());
         handleQRDetected(code.data);
-        return; // Stop scanning after successful detection
+        return; // Stop scanning after detection
       }
       
+      setFramesScanned(prev => prev + 1);
+      
       // Continue scanning
-      if (isCameraActive) {
-        animationFrameRef.current = requestAnimationFrame(detectQR);
-      }
-    };
-
-    detectQR();
-  };
-
-  const handleQRDetected = (qrData) => {
-    console.log('QR Code detected, processing:', qrData);
-    
-    const now = Date.now();
-    if (lastScanTime && now - lastScanTime < 2000) {
-      console.log('Scan too soon, ignoring');
-      return;
+      animationFrameRef.current = requestAnimationFrame(detectQR);
+      
+    } catch (error) {
+      console.error('QR detection error:', error);
+      // Continue scanning despite errors
+      animationFrameRef.current = requestAnimationFrame(detectQR);
     }
-    setLastScanTime(now);
-
-    setScanAttempts(prev => prev + 1);
-    setScanningStatus('detected');
-    processQRData(qrData);
   };
+  
+  detectQR();
+};
+
+// Process single video frame for QR detection
+const processVideoFrame = () => {
+  const video = videoRef.current;
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext('2d');
+  
+  // Update canvas size if video dimensions changed
+  if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    if (debugEnabled) {
+      setVideoSize({ width: video.videoWidth, height: video.videoHeight });
+      setCanvasSize({ width: canvas.width, height: canvas.height });
+    }
+  }
+  
+  // Draw current video frame
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  // Get image data for QR detection
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  
+  // Detect QR code
+  return jsQR(imageData.data, imageData.width, imageData.height, {
+    inversionAttempts: "dontInvert",
+  });
+};
+
+// Handle QR code detection with debouncing
+const handleQRDetected = (qrData) => {
+  console.log('QR Code detected, processing:', qrData);
+  
+  const now = Date.now();
+  const DEBOUNCE_TIME = 2000;
+  
+  if (lastScanTime && now - lastScanTime < DEBOUNCE_TIME) {
+    console.log('Scan too recent, ignoring');
+    return;
+  }
+  
+  setLastScanTime(now);
+  setScanAttempts(prev => prev + 1);
+  setScanningStatus('detected');
+  
+  // Process the QR data
+  processQRData(qrData);
+};
+
+// Utility function to check if camera is supported
+const isCameraSupported = () => {
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+};
+
 
   
   const processQRData = async (qrData) => {
