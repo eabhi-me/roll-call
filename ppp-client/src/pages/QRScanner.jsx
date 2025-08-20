@@ -22,7 +22,7 @@ const QrScanner = () => {
             try {
               const jsonData = JSON.parse(decodedText);
               setScannedData(jsonData);
-              console.log(jsonData);
+              handleattendence();
             } catch (parseError) {
               setError('Scanned data is not valid JSON.');
             }
@@ -43,6 +43,7 @@ const QrScanner = () => {
     };
   }, []);
 
+
   const stopScanner = async () => {
     if (html5QrCodeRef.current && scanning) {
       await html5QrCodeRef.current.stop();
@@ -56,6 +57,8 @@ const QrScanner = () => {
     setError(null);
     window.location.reload(); // reload to allow rescan
   };
+
+
 
   return (
     <div style={styles.pageContainer}>
