@@ -82,10 +82,8 @@ export const eventsAPI = {
     method: 'DELETE',
   }),
 
-  getUpcomingEvents: (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiCall(`/events/upcoming?${queryString}`);
-  },
+
+  getActiveEvents: () => apiCall('/events/active'),
 
   getEventStats: () => apiCall('/events/stats/overview'),
 };

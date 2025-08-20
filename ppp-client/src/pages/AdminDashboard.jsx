@@ -223,8 +223,6 @@ const AdminDashboard = ({ user, onLogout }) => {
     { name: 'Create Event', icon: Plus, href: '/create-event', current: false },
     { name: 'Attendance Report', icon: BarChart3, href: '/attendance-report', current: false },
     { name: 'Manage Notices', icon: Bell, href: '/notices', current: false },
-    { name: 'Event Attendance', icon: ClipboardList, href: '#', current: false },
-    { name: 'Settings', icon: Settings, href: '#', current: false },
   ];
 
   return (
@@ -244,7 +242,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             
-            <span className="text-sm font-bold text-gray-900">TNP Admin</span>
+            <span className="text-sm font-bold text-gray-900">Admin</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -316,7 +314,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <h1 className="text-lg font-bold text-gray-900">TNP Admin Dashboard</h1>
+                <h1 className="text-lg font-bold text-gray-900">Admin</h1>
               </div>
               
               <div className="hidden lg:flex items-center space-x-3">

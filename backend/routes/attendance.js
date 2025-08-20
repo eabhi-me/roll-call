@@ -25,26 +25,6 @@ router.post('/mark', adminAuth, validateAttendanceMarking, async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Enforce active event time window to prevent proxy attendance
-    try {
-      const now = new Date();
-      const todayStr = new Date().toISOString().split('T')[0];
-      if (String(event.date) !== todayStr) {
-        return res.status(400).json({ error: 'Event is not active (wrong date)' });
-      }
-      if (!event.time) {
-        return res.status(400).json({ error: 'Event time not set' });
-      }
-      const [hh, mm] = String(event.time).split(':');
-      const start = new Date(now);
-      start.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
-      const diffMinutes = (start.getTime() - now.getTime()) / 60000;
-      const beforeMinutes = 30; // allow late/early threshold
-      const afterMinutes = 180;
-      if (!(diffMinutes >= -beforeMinutes && diffMinutes <= afterMinutes)) {
-        return res.status(400).json({ error: 'Event is not currently active' });
-      }
-    } catch {}
 
     // Check if attendance already exists for this user and event
     const existingAttendance = await Attendance.findOne({
@@ -356,55 +336,147 @@ router.get('/report/pdf', adminAuth, async (req, res) => {
     }
 
     // Generate PDF
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({ 
+      size: 'A4',
+      margins: { top: 50, bottom: 50, left: 50, right: 50 }
+    });
+
+    // Generate dynamic filename based on filters
+    let filename = 'attendance-report';
+    if (status) filename += `-${status}`;
+    if (event_type) filename += `-${event_type.replace(/\s+/g, '-').toLowerCase()}`;
+    if (date_from || date_to) {
+      if (date_from && date_to) {
+        filename += `-${date_from}-to-${date_to}`;
+      } else if (date_from) {
+        filename += `-from-${date_from}`;
+      } else if (date_to) {
+        filename += `-until-${date_to}`;
+      }
+    }
+    filename += `.pdf`;
 
     // Set response headers
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=attendance-report.pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
 
     // Pipe PDF to response
     doc.pipe(res);
 
-    // Add content to PDF
-    doc.fontSize(20).text('Attendance Report', { align: 'center' });
+    // Add header
+    doc.fontSize(18).text('ATTENDANCE REPORT', { align: 'center', underline: true });
     doc.moveDown();
 
-    // Add filters info
-    if (status || event_type || date_from || date_to) {
-      doc.fontSize(12).text('Filters Applied:', { underline: true });
-      if (status) doc.fontSize(10).text(`Status: ${status}`);
-      if (event_type) doc.fontSize(10).text(`Event Type: ${event_type}`);
-      if (date_from) doc.fontSize(10).text(`From: ${date_from}`);
-      if (date_to) doc.fontSize(10).text(`To: ${date_to}`);
+    // Add filters info with better formatting
+    if (status || event_type || date_from || date_to || search) {
+      doc.fontSize(12).font('Helvetica-Bold').text('APPLIED FILTERS:', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(10).font('Helvetica');
+      
+      if (status) {
+        doc.fillColor('#007bff').text(`• Status: ${status.toUpperCase()}`);
+      }
+      if (event_type) {
+        doc.fillColor('#28a745').text(`• Event Type: ${event_type}`);
+      }
+      if (date_from && date_to) {
+        doc.fillColor('#dc3545').text(`• Date Range: ${date_from} to ${date_to}`);
+      } else if (date_from) {
+        doc.fillColor('#dc3545').text(`• From Date: ${date_from}`);
+      } else if (date_to) {
+        doc.fillColor('#dc3545').text(`• To Date: ${date_to}`);
+      }
+      if (search) {
+        doc.fillColor('#6c757d').text(`• Search Term: "${search}"`);
+      }
+      
+      doc.fillColor('#000000'); // Reset color
+      doc.moveDown();
+      
+      // Add a separator line
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#cccccc');
       doc.moveDown();
     }
 
-    // Add attendance records
-    attendance.forEach((record, index) => {
-      const name = record.user_id?.name || '';
-      const roll = record.user_id?.roll_no || '';
-      const trade = record.user_id?.trade || '';
-      const title = record.event_id?.title || '';
-      const eType = record.event_id?.event_type || '';
-      const eDate = record.event_id?.date || '';
-      const eTime = record.event_id?.time || '';
-      const verifier = record.verified_by?.name || '';
-      doc.fontSize(10).text(`${index + 1}. ${name} (${roll}) - ${trade}`);
-      doc.fontSize(8).text(`   Event: ${title} - ${eType}`);
-      doc.fontSize(8).text(`   Date: ${eDate} at ${eTime}`);
-      doc.fontSize(8).text(`   Status: ${record.status} | Verified by: ${verifier}`);
-      doc.fontSize(8).text(`   Marked on: ${record.createdAt.toLocaleDateString()}`);
-      doc.moveDown(0.5);
-    });
+    // Table configuration
+    const tableTop = doc.y;
+    const leftMargin = 50;
+    const colWidths = [30, 120, 80, 140, 80, 90]; // S.No, Name, Roll No, Event, Status, Date
+    const rowHeight = 25;
+    
+    // Draw table header
+    let currentY = tableTop;
+    doc.fontSize(10).font('Helvetica-Bold');
+    
+    // Header background
+    doc.rect(leftMargin, currentY - 5, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+       .fillAndStroke('#f0f0f0', '#000000');
+    
+    // Header text
+    doc.fillColor('#000000');
+    doc.text('S.No', leftMargin + 5, currentY + 5, { width: colWidths[0] - 10 });
+    doc.text('Name', leftMargin + colWidths[0] + 5, currentY + 5, { width: colWidths[1] - 10 });
+    doc.text('Roll No', leftMargin + colWidths[0] + colWidths[1] + 5, currentY + 5, { width: colWidths[2] - 10 });
+    doc.text('Event', leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + 5, currentY + 5, { width: colWidths[3] - 10 });
+    doc.text('Status', leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 5, currentY + 5, { width: colWidths[4] - 10 });
+    doc.text('Date', leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 5, currentY + 5, { width: colWidths[5] - 10 });
 
-    // Add summary
-    doc.moveDown();
-    doc.fontSize(12).text('Summary:', { underline: true });
-    const presentCount = attendance.filter(r => r.status === 'present').length;
-    const absentCount = attendance.filter(r => r.status === 'absent').length;
-    doc.fontSize(10).text(`Total Records: ${attendance.length}`);
-    doc.fontSize(10).text(`Present: ${presentCount}`);
-    doc.fontSize(10).text(`Absent: ${absentCount}`);
+    currentY += rowHeight;
+
+    // Add attendance records in table format
+    doc.font('Helvetica');
+    attendance.forEach((record, index) => {
+      // Check if we need a new page
+      if (currentY > 700) {
+        doc.addPage();
+        currentY = 50;
+      }
+
+      const name = record.user_id?.name || 'N/A';
+      const roll = record.user_id?.roll_no || 'N/A';
+      const event = record.event_id?.title || 'N/A';
+      const status = record.status || 'N/A';
+      const date = record.createdAt ? record.createdAt.toLocaleDateString() : 'N/A';
+
+      // Alternate row colors
+      if (index % 2 === 0) {
+        doc.rect(leftMargin, currentY - 5, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+           .fill('#f9f9f9');
+      }
+
+      // Row borders
+      doc.rect(leftMargin, currentY - 5, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+         .stroke('#cccccc');
+
+      // Status color coding
+      let statusColor = '#000000';
+      if (status === 'present') statusColor = '#28a745';
+      else if (status === 'absent') statusColor = '#dc3545';
+
+      // Cell content
+      doc.fillColor('#000000').fontSize(9);
+      doc.text((index + 1).toString(), leftMargin + 5, currentY + 5, { width: colWidths[0] - 10 });
+      doc.text(name, leftMargin + colWidths[0] + 5, currentY + 5, { width: colWidths[1] - 10 });
+      doc.text(roll, leftMargin + colWidths[0] + colWidths[1] + 5, currentY + 5, { width: colWidths[2] - 10 });
+      doc.text(event, leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + 5, currentY + 5, { width: colWidths[3] - 10 });
+      
+      // Status with color
+      doc.fillColor(statusColor);
+      doc.text(status.toUpperCase(), leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 5, currentY + 5, { width: colWidths[4] - 10 });
+      
+      doc.fillColor('#000000');
+      doc.text(date, leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 5, currentY + 5, { width: colWidths[5] - 10 });
+
+      // Vertical lines for columns
+      let xPos = leftMargin;
+      colWidths.forEach(width => {
+        doc.moveTo(xPos, currentY - 5).lineTo(xPos, currentY + rowHeight - 5).stroke('#cccccc');
+        xPos += width;
+      });
+      doc.moveTo(xPos, currentY - 5).lineTo(xPos, currentY + rowHeight - 5).stroke('#cccccc');
+
+      currentY += rowHeight;
+    });
 
     // Finalize PDF
     doc.end();

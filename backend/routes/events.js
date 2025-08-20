@@ -127,30 +127,27 @@ router.get('/upcoming', async (req, res) => {
   }
 });
 
-// Get Active Events (running now)
+// Get Active Events (yesterday, today, tomorrow)
 router.get('/active', async (req, res) => {
   try {
-    const now = new Date();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
 
-    // Time window: allow events starting within the last 30 minutes and up to 3 hours ahead
-    const beforeMinutes = 30;
-    const afterMinutes = 180;
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-    const eventsToday = await Event.find({ isActive: true, date: todayStr })
+    const events = await Event.find({ 
+      isActive: true, 
+      date: { $in: [yesterdayStr, todayStr, tomorrowStr] }
+    })
       .populate('createdBy', 'name email')
-      .sort({ time: 1 });
+      .sort({ date: 1, time: 1 });
 
-    const active = eventsToday.filter(ev => {
-      if (!ev.time) return false;
-      const [hh, mm] = String(ev.time).split(':');
-      const start = new Date(now);
-      start.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
-      const diffMinutes = (start.getTime() - now.getTime()) / 60000;
-      return diffMinutes >= -beforeMinutes && diffMinutes <= afterMinutes;
-    });
-
-    res.json({ success: true, events: active, count: active.length });
+    res.json({ success: true, events: events, count: events.length });
   } catch (error) {
     console.error('Get active events error:', error);
     res.status(500).json({ error: 'Internal server error' });
