@@ -40,6 +40,21 @@ router.post('/', adminAuth, validateEventCreation, async (req, res) => {
   }
 });
 
+router.get('/all',async (req,res) =>{
+  try{
+    const data = await Event.find({isActive:true});
+    // console.log(data);
+
+    res.json({
+      success: true,
+      events: data,
+      count: data.length
+    });
+  }catch(error){
+    console.log("Error Occured:",error);
+  }
+});
+
 // Get All Events (with filtering and pagination)
 router.get('/', async (req, res) => {
   try {
@@ -99,30 +114,57 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get Upcoming Events
-router.get('/upcoming', async (req, res) => {
+router.get('/upcoming/count', async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
-    const today = new Date().toISOString().split('T')[0];
+    const { 
+      limit = 10, 
+      event_type, 
+      days_ahead = 30,
+      include_stats = false 
+    } = req.query;
+    
+    const today = new Date();
+    const futureDate = new Date(today);
+    futureDate.setDate(today.getDate() + parseInt(days_ahead));
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const futureDateStr = futureDate.toISOString().split('T')[0];
 
     const filter = {
       isActive: true,
-      date: { $gte: today }
+      date: { $gte: todayStr, $lte: futureDateStr }
     };
+
+    if (event_type) {
+      filter.event_type = event_type;
+    }
 
     const events = await Event.find(filter)
       .populate('createdBy', 'name email')
       .sort({ date: 1, time: 1 })
       .limit(parseInt(limit));
 
-    res.json({
+    const response = {
       success: true,
       events: events,
       count: events.length
-    });
+    };
+
+    if (include_stats === 'true') {
+      const totalCount = await Event.countDocuments(filter);
+      const eventTypeStats = await Event.aggregate([
+        { $match: filter },
+        { $group: { _id: '$event_type', count: { $sum: 1 } } }
+      ]);
+      
+      response.totalCount = totalCount;
+      response.eventTypeStats = eventTypeStats;
+    }
+
+    res.json(response);
 
   } catch (error) {
-    console.error('Get upcoming events error:', error);
+    console.error('Get enhanced upcoming events error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -14,7 +14,6 @@ const QrScanner = () => {
   const html5QrCodeRef = useRef(null);
 
   useEffect(() => {
-    // Load active events on component mount
     loadActiveEvents();
 
     const startScanner = async () => {
@@ -30,7 +29,6 @@ const QrScanner = () => {
             try {
               const jsonData = JSON.parse(decodedText);
               setScannedData(jsonData);
-              // Events are already loaded, no need to fetch again
             } catch (parseError) {
               setError('Scanned data is not valid JSON.');
             }
@@ -51,7 +49,7 @@ const QrScanner = () => {
     };
   }, []);
 
-  // Load active events on mount
+  
   const loadActiveEvents = async () => {
     try {
       const res = await eventsAPI.getActiveEvents();
@@ -79,10 +77,10 @@ const QrScanner = () => {
     setError(null);
     setSelectedEventId('');
     setMarkResult(null);
-    window.location.reload(); // reload to allow rescan
+    window.location.reload();
   };
 
-  // Mark attendance
+  
   const handleMarkAttendance = async () => {
     if (!selectedEventId || !scannedData) return;
     setMarking(true);
@@ -91,7 +89,7 @@ const QrScanner = () => {
       const payload = {
         eventId: selectedEventId,
         ...scannedData,
-        status: 'present', // default status
+        status: 'present',
       };
       const res = await attendanceAPI.markAttendance(payload);
       setMarkResult(res);

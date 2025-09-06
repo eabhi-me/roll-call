@@ -55,14 +55,14 @@ const UserDashboard = ({ user, onLogout }) => {
       console.log('Fetching user dashboard data...');
       console.log('User object:', user);
       
-      // Fetch upcoming events
+      
       const eventsResponse = await noticesAPI.getUpcomingNotices();
       console.log('Events response:', eventsResponse);
       if (eventsResponse.success) {
-        setUpcomingEvents(eventsResponse.events.slice(0, 5)); // Show only 5 upcoming events
+        setUpcomingEvents(eventsResponse.events.slice(0, 5));
       }
 
-      // Fetch user's attendance statistics
+      
       const userId = user._id || user.id;
       console.log('Using user ID:', userId);
       const attendanceStatsResponse = await attendanceAPI.getUserAttendanceStats(userId);
@@ -71,7 +71,7 @@ const UserDashboard = ({ user, onLogout }) => {
         const stats = attendanceStatsResponse.data;
         setRecentAttendance(stats.recentAttendance || []);
         
-        // Calculate comprehensive stats
+        
         setStats({
           totalEventsAttended: stats.overall?.present || 0,
           totalEvents: stats.overall?.total || 0,
@@ -82,7 +82,6 @@ const UserDashboard = ({ user, onLogout }) => {
           upcomingEvents: eventsResponse.success ? eventsResponse.events.length : 0
         });
       } else {
-        // Fallback to basic attendance data
         const attendanceResponse = await attendanceAPI.getUserAttendance(userId);
         console.log('Fallback attendance response:', attendanceResponse);
         if (attendanceResponse.success) {
@@ -112,7 +111,7 @@ const UserDashboard = ({ user, onLogout }) => {
   };
 
   const calculateConsecutiveAttendance = (attendanceRecords) => {
-    // Sort by date descending and count consecutive present records
+    
     const sortedRecords = attendanceRecords
       .filter(a => a.status === 'present')
       .sort((a, b) => new Date(b.date) - new Date(a.date));
