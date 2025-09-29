@@ -231,14 +231,13 @@ const Signup = ({ onSignup }) => {
                 >
                   <option value="">Select Trade</option>
                   <option value="Computer Science Engineering">Computer Science Engineering</option>
-                  <option value="Information Technology">Information Technology</option>
+                  <option value="Instrumentation">Instrumentation</option>
                   <option value="Electronics & Communication">Electronics & Communication</option>
                   <option value="Mechanical Engineering">Mechanical Engineering</option>
                   <option value="Civil Engineering">Civil Engineering</option>
                   <option value="Electrical Engineering">Electrical Engineering</option>
                   <option value="Chemical Engineering">Chemical Engineering</option>
-                  <option value="Biotechnology">Biotechnology</option>
-                  <option value="TNP">TNP</option>
+                  <option value="Food Technology">Food Technology</option>
                 </select>
               </div>
               {errors.trade && (
