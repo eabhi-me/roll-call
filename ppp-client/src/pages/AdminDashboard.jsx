@@ -28,7 +28,8 @@ import {
   ClipboardList
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { usersAPI, eventsAPI, attendanceAPI } from '../services/api';
+import { usersAPI, noticesAPI, attendanceAPI, eventsAPI } from '../services/api';
+import { use } from 'react';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState({
@@ -49,6 +50,9 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [recentMarkedNames, setRecentMarkedNames] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [upcount,setUpcount] = useState(0); //this is for upcoming events count
+  const [total,setTotal] = useState(0); //this is to count total events;
+
 
   useEffect(() => {
     fetchDashboardData();
@@ -58,11 +62,11 @@ const AdminDashboard = ({ user, onLogout }) => {
     try {
       setLoading(true);
       
-      console.log('Fetching dashboard data...');
+      // console.log('Fetching dashboard data...');
       
       // Fetch user statistics
       const usersResponse = await usersAPI.getUserStats();
-      console.log('Users response:', usersResponse);
+      // console.log('Users response:', usersResponse);
       if (usersResponse.success) {
         setStats(prevStats => ({
           ...prevStats,
@@ -70,26 +74,47 @@ const AdminDashboard = ({ user, onLogout }) => {
         }));
       }
 
-      // Fetch upcoming events
-      const eventsResponse = await eventsAPI.getUpcomingEvents({ limit: 10 });
-      console.log('Events response:', eventsResponse);
+
+      // //fetch event data
+      const eventsResponse = await noticesAPI.getUpcomingNotices();
+      // console.log('Events response:', eventsResponse);
       if (eventsResponse.success) {
-        setEvents(eventsResponse.events.slice(0, 6)); // Show only 6 events
-        
-        const today = new Date().toISOString().split('T')[0];
-        const todayEvents = eventsResponse.events.filter(e => e.date === today).length;
-        
+        setEvents(eventsResponse.events.slice(0, 5)); // Show only 5 upcoming events
+      }
+
+      let totalUpcoming = 0;
+      
+      if(eventsResponse.success && Array.isArray(eventsResponse.events)) {
+        totalUpcoming = eventsResponse.events.length;
+        setUpcount(totalUpcoming);
+      }
+
+      // console.log('Total upcoming events:', totalUpcoming);
+      setStats(prevStats => ({
+          ...prevStats,
+          totalEventsUpcoming: totalUpcoming
+      }));
+
+      //get all events
+      const allEvents = await eventsAPI.getAllEvents();
+      if(allEvents){
+        // console.log("The event data is as follows:",allEvents);
+        const data = allEvents;
+        const total = data.count;
         setStats(prevStats => ({
           ...prevStats,
-          totalEvents: eventsResponse.events.length,
-          totalEventsUpcoming: eventsResponse.events.length,
-          eventsOccurredPast: 0 // We'll calculate this from attendance data
-        }));
+          totalEvents: total
+      }));
       }
+      else{
+        console.log("Error occured");
+      }
+
+      
 
       // Fetch comprehensive attendance statistics
       const attendanceStatsResponse = await attendanceAPI.getAttendanceStats();
-      console.log('Attendance stats response:', attendanceStatsResponse);
+      // console.log('Attendance stats response:', attendanceStatsResponse);
       if (attendanceStatsResponse.success) {
         const stats = attendanceStatsResponse.data;
         setRecentAttendance(stats.recentAttendance || []);
@@ -122,7 +147,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       } else {
         // Fallback to basic attendance data
         const attendanceResponse = await attendanceAPI.getAttendanceReport({ limit: 5 });
-        console.log('Fallback attendance response:', attendanceResponse);
+        // console.log('Fallback attendance response:', attendanceResponse);
         if (attendanceResponse.success) {
           setRecentAttendance(attendanceResponse.attendance.slice(0, 5));
           

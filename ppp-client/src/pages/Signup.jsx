@@ -24,14 +24,14 @@ const Signup = ({ onSignup }) => {
   const handleSignup = async (data) => {
     setLoading(true);
     try {
-      // Validate required fields
+      
       if (!data.name || !data.email || !data.password || !data.roll_no || !data.trade) {
         toast.error('Please fill in all required fields');
         setLoading(false);
         return;
       }
 
-      // Test backend connection first
+      
       try {
         const testResponse = await fetch(`${API_BASE_URL}/test-cors`, {
           method: 'GET',
@@ -55,19 +55,19 @@ const Signup = ({ onSignup }) => {
         return;
       }
 
-      // Prepare user data according to backend model
+      
       const userData = {
         name: data.name.trim(),
         email: data.email.trim().toLowerCase(),
         password: data.password,
         trade: data.trade,
         roll_no: data.roll_no.trim(),
-        role: 'user' // Default role for signup
+        role: 'user' 
       };
 
-      console.log('Sending signup data:', { ...userData, password: '[HIDDEN]' });
+      // console.log('Sending signup data:', { ...userData, password: '[HIDDEN]' });
 
-      // Make API call to backend
+      
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
@@ -81,22 +81,20 @@ const Signup = ({ onSignup }) => {
       console.log('Signup response:', result);
 
       if (response.ok && result.message && result.user && result.token) {
-        // Store token in localStorage
+       
         localStorage.setItem('token', result.token);
-        
-        // Store user data in localStorage
         localStorage.setItem('user', JSON.stringify(result.user));
         
-        // Call the onSignup callback to update parent state
+        
         onSignup(result.user);
         
-        // Show success message
+        
         toast.success(`Welcome, ${result.user.name}! Your account has been created successfully.`);
         
-        // Debug: Log user role for navigation
-        console.log('User role for navigation:', result.user.role);
         
-        // Navigate to appropriate dashboard based on role
+        // console.log('User role for navigation:', result.user.role);
+        
+        
         if (result.user.role === 'admin') {
           console.log('Navigating to admin dashboard');
           navigate('/admin');
@@ -105,7 +103,7 @@ const Signup = ({ onSignup }) => {
           navigate('/dashboard');
         }
       } else {
-        // Handle backend validation errors
+        
         const errorMessage = result.error || 'Registration failed. Please try again.';
         toast.error(errorMessage);
       }

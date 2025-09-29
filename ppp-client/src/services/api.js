@@ -71,7 +71,13 @@ export const eventsAPI = {
     return apiCall(`/events?${queryString}`);
   },
 
+  getAllEvents: () => apiCall('/events/all'),
+
+  getActiveEvents: () => apiCall('/events/active'),
+
   getEvent: (eventId) => apiCall(`/events/${eventId}`),
+
+  getUpcomingEventsCount: () => apiCall('/events/upcoming/count'),
 
   updateEvent: (eventId, eventData) => apiCall(`/events/${eventId}`, {
     method: 'PUT',

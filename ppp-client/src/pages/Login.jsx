@@ -44,9 +44,9 @@ const Login = ({ onLogin }) => {
         return;
       }
 
-      console.log('Attempting login with email:', data.email);
+      // console.log('Attempting login with email:', data.email);
 
-      // Make API call to backend
+      
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -58,30 +58,30 @@ const Login = ({ onLogin }) => {
         }),
       });
 
-      console.log('Login response status:', response.status);
+      // console.log('Login response status:', response.status);
       const result = await response.json();
-      console.log('Login response:', { ...result, user: result.user ? 'User data received' : 'No user data' });
+      // console.log('Login response:', { ...result, user: result.user ? 'User data received' : 'No user data' });
 
       if (response.ok && result.message && result.user && result.token) {
-        // Store token in localStorage
+        
         localStorage.setItem('token', result.token);
         
-        // Store user data in localStorage
+        
         localStorage.setItem('user', JSON.stringify(result.user));
         
-        // Call the onLogin callback to update parent state
+      
         onLogin(result.user);
         
-        // Show success message
+        
         toast.success(`Welcome back, ${result.user.name}!`);
         
-        // Debug: Log user role for navigation
-        console.log('User role for navigation:', result.user.role);
-        console.log('User data:', result.user);
         
-        // Navigate to appropriate dashboard based on role
+        // console.log('User role for navigation:', result.user.role);
+        // console.log('User data:', result.user);
+        
+        
         if (result.user.role === 'admin') {
-          console.log('Navigating to admin dashboard');
+          // console.log('Navigating to admin dashboard');
           navigate('/admin');
         } else if (result.user.role === 'user') {
           console.log('Navigating to user dashboard');
