@@ -218,7 +218,8 @@ router.get('/report', adminAuth, async (req, res) => {
       event_type,
       date_from,
       date_to,
-      search
+      search,
+      trade
     } = req.query;
 
     const filter = {};
@@ -244,6 +245,13 @@ router.get('/report', adminAuth, async (req, res) => {
     if (event_type) {
       attendance = attendance.filter(record => 
         record.event_id.event_type === event_type
+      );
+    }
+
+    // Apply trade filter
+    if (trade && trade !== 'all') {
+      attendance = attendance.filter(record => 
+        record.user_id.trade === trade
       );
     }
 
@@ -301,7 +309,8 @@ router.get('/report/pdf', adminAuth, async (req, res) => {
       event_type,
       date_from,
       date_to,
-      search
+      search,
+      trade
     } = req.query;
 
     const filter = {};
@@ -326,6 +335,13 @@ router.get('/report/pdf', adminAuth, async (req, res) => {
       );
     }
 
+    // Apply trade filter
+    if (trade && trade !== 'all') {
+      attendance = attendance.filter(record => 
+        record.user_id.trade === trade
+      );
+    }
+
     // Apply search filter
     if (search) {
       attendance = attendance.filter(record =>
@@ -345,6 +361,7 @@ router.get('/report/pdf', adminAuth, async (req, res) => {
     let filename = 'attendance-report';
     if (status) filename += `-${status}`;
     if (event_type) filename += `-${event_type.replace(/\s+/g, '-').toLowerCase()}`;
+    if (trade && trade !== 'all') filename += `-${trade.replace(/\s+/g, '-').toLowerCase()}`;
     if (date_from || date_to) {
       if (date_from && date_to) {
         filename += `-${date_from}-to-${date_to}`;
@@ -363,121 +380,142 @@ router.get('/report/pdf', adminAuth, async (req, res) => {
     // Pipe PDF to response
     doc.pipe(res);
 
-    // Add header
-    doc.fontSize(18).text('ATTENDANCE REPORT', { align: 'center', underline: true });
-    doc.moveDown();
+    // Simple header
+    doc.fontSize(18).font('Helvetica-Bold').text('ATTENDANCE REPORT', { align: 'center' });
+    doc.fontSize(10).text(`Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
+    doc.moveDown(2);
 
-    // Add filters info with better formatting
-    if (status || event_type || date_from || date_to || search) {
-      doc.fontSize(12).font('Helvetica-Bold').text('APPLIED FILTERS:', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(10).font('Helvetica');
+    // Simple filters info
+    if (status || event_type || trade || date_from || date_to || search) {
+      doc.fontSize(10).font('Helvetica').text('Applied Filters: ');
       
-      if (status) {
-        doc.fillColor('#007bff').text(`• Status: ${status.toUpperCase()}`);
-      }
-      if (event_type) {
-        doc.fillColor('#28a745').text(`• Event Type: ${event_type}`);
-      }
-      if (date_from && date_to) {
-        doc.fillColor('#dc3545').text(`• Date Range: ${date_from} to ${date_to}`);
-      } else if (date_from) {
-        doc.fillColor('#dc3545').text(`• From Date: ${date_from}`);
-      } else if (date_to) {
-        doc.fillColor('#dc3545').text(`• To Date: ${date_to}`);
-      }
-      if (search) {
-        doc.fillColor('#6c757d').text(`• Search Term: "${search}"`);
-      }
+      let filters = [];
+      if (status) filters.push(`Status: ${status}`);
+      if (event_type) filters.push(`Event Type: ${event_type}`);
+      if (trade && trade !== 'all') filters.push(`Trade: ${trade}`);
+      if (date_from && date_to) filters.push(`Date: ${date_from} to ${date_to}`);
+      if (search) filters.push(`Search: "${search}"`);
       
-      doc.fillColor('#000000'); // Reset color
-      doc.moveDown();
-      
-      // Add a separator line
-      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#cccccc');
+      doc.text(filters.join(', '));
       doc.moveDown();
     }
+    
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown();
 
-    // Table configuration
+    // Simple table configuration
     const tableTop = doc.y;
     const leftMargin = 50;
-    const colWidths = [30, 120, 80, 140, 80, 90]; // S.No, Name, Roll No, Event, Status, Date
+    const colWidths = [30, 120, 70, 90, 130, 60, 70]; // S.No, Name, Roll No, Trade, Event, Status, Date
     const rowHeight = 25;
     
-    // Draw table header
     let currentY = tableTop;
+    
+    // Simple table header
     doc.fontSize(10).font('Helvetica-Bold');
     
     // Header background
-    doc.rect(leftMargin, currentY - 5, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+    doc.rect(leftMargin, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
        .fillAndStroke('#f0f0f0', '#000000');
     
     // Header text
     doc.fillColor('#000000');
-    doc.text('S.No', leftMargin + 5, currentY + 5, { width: colWidths[0] - 10 });
-    doc.text('Name', leftMargin + colWidths[0] + 5, currentY + 5, { width: colWidths[1] - 10 });
-    doc.text('Roll No', leftMargin + colWidths[0] + colWidths[1] + 5, currentY + 5, { width: colWidths[2] - 10 });
-    doc.text('Event', leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + 5, currentY + 5, { width: colWidths[3] - 10 });
-    doc.text('Status', leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 5, currentY + 5, { width: colWidths[4] - 10 });
-    doc.text('Date', leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 5, currentY + 5, { width: colWidths[5] - 10 });
+    const headers = ['S.No', 'Name', 'Roll No', 'Trade', 'Event', 'Status', 'Date'];
+    let xPos = leftMargin;
+    
+    headers.forEach((header, i) => {
+      doc.text(header, xPos + 5, currentY + 8, { width: colWidths[i] - 10 });
+      xPos += colWidths[i];
+    });
 
     currentY += rowHeight;
 
-    // Add attendance records in table format
-    doc.font('Helvetica');
+    // Add attendance records
+    doc.font('Helvetica').fontSize(9);
+    
     attendance.forEach((record, index) => {
       // Check if we need a new page
       if (currentY > 700) {
         doc.addPage();
         currentY = 50;
+        
+        // Repeat header
+        doc.fontSize(10).font('Helvetica-Bold');
+        doc.rect(leftMargin, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+           .fillAndStroke('#f0f0f0', '#000000');
+        
+        doc.fillColor('#000000');
+        xPos = leftMargin;
+        headers.forEach((header, i) => {
+          doc.text(header, xPos + 5, currentY + 8, { width: colWidths[i] - 10 });
+          xPos += colWidths[i];
+        });
+        currentY += rowHeight;
+        doc.font('Helvetica').fontSize(9);
       }
 
       const name = record.user_id?.name || 'N/A';
       const roll = record.user_id?.roll_no || 'N/A';
+      const trade = record.user_id?.trade || 'N/A';
       const event = record.event_id?.title || 'N/A';
       const status = record.status || 'N/A';
       const date = record.createdAt ? record.createdAt.toLocaleDateString() : 'N/A';
 
       // Alternate row colors
       if (index % 2 === 0) {
-        doc.rect(leftMargin, currentY - 5, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+        doc.rect(leftMargin, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
            .fill('#f9f9f9');
       }
 
       // Row borders
-      doc.rect(leftMargin, currentY - 5, colWidths.reduce((a, b) => a + b, 0), rowHeight)
+      doc.rect(leftMargin, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight)
          .stroke('#cccccc');
 
-      // Status color coding
+      // Status color
       let statusColor = '#000000';
       if (status === 'present') statusColor = '#28a745';
       else if (status === 'absent') statusColor = '#dc3545';
 
       // Cell content
-      doc.fillColor('#000000').fontSize(9);
-      doc.text((index + 1).toString(), leftMargin + 5, currentY + 5, { width: colWidths[0] - 10 });
-      doc.text(name, leftMargin + colWidths[0] + 5, currentY + 5, { width: colWidths[1] - 10 });
-      doc.text(roll, leftMargin + colWidths[0] + colWidths[1] + 5, currentY + 5, { width: colWidths[2] - 10 });
-      doc.text(event, leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + 5, currentY + 5, { width: colWidths[3] - 10 });
-      
-      // Status with color
-      doc.fillColor(statusColor);
-      doc.text(status.toUpperCase(), leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 5, currentY + 5, { width: colWidths[4] - 10 });
-      
       doc.fillColor('#000000');
-      doc.text(date, leftMargin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 5, currentY + 5, { width: colWidths[5] - 10 });
+      xPos = leftMargin;
+      
+      const cellData = [
+        (index + 1).toString(),
+        name.length > 15 ? name.substring(0, 15) + '...' : name,
+        roll,
+        trade.length > 12 ? trade.substring(0, 12) + '...' : trade,
+        event.length > 18 ? event.substring(0, 18) + '...' : event,
+        status,
+        date
+      ];
+      
+      cellData.forEach((data, i) => {
+        if (i === 5) { // Status column
+          doc.fillColor(statusColor);
+          doc.text(data.toUpperCase(), xPos + 5, currentY + 8, { width: colWidths[i] - 10 });
+          doc.fillColor('#000000');
+        } else {
+          doc.text(data, xPos + 5, currentY + 8, { width: colWidths[i] - 10 });
+        }
+        xPos += colWidths[i];
+      });
 
-      // Vertical lines for columns
-      let xPos = leftMargin;
+      // Vertical lines
+      xPos = leftMargin;
       colWidths.forEach(width => {
-        doc.moveTo(xPos, currentY - 5).lineTo(xPos, currentY + rowHeight - 5).stroke('#cccccc');
+        doc.moveTo(xPos, currentY).lineTo(xPos, currentY + rowHeight).stroke('#cccccc');
         xPos += width;
       });
-      doc.moveTo(xPos, currentY - 5).lineTo(xPos, currentY + rowHeight - 5).stroke('#cccccc');
+      doc.moveTo(xPos, currentY).lineTo(xPos, currentY + rowHeight).stroke('#cccccc');
 
       currentY += rowHeight;
     });
 
+    // Simple footer
+    doc.moveDown();
+    doc.fontSize(8).text(`Total Records: ${attendance.length} | Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
+    
     // Finalize PDF
     doc.end();
 

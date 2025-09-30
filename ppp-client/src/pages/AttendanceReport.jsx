@@ -41,13 +41,14 @@ const AttendanceReport = ({ user, onLogout }) => {
 
   const trades = [
     'All Trades',
-    'GCS',
-    'GIN',
-    'GME',
-    'GEC',
-    'GEE',
-    'GFT',
-    'GCT'
+    'Computer Science Engineering',
+    'Instrumentation',
+    'Electronics & Communication',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'Electrical Engineering',
+    'Chemical Engineering',
+    'Food Technology'
   ];
 
   const eventTypes = ['All Types', 'Event', 'TNP Meeting'];
@@ -114,7 +115,7 @@ const AttendanceReport = ({ user, onLogout }) => {
     }
 
     // Trade filter
-    if (tradeFilter !== 'all') {
+    if (tradeFilter !== 'all' && tradeFilter !== 'All Trades') {
       filtered = filtered.filter(record => record.trade === tradeFilter);
     }
 
@@ -147,7 +148,41 @@ const AttendanceReport = ({ user, onLogout }) => {
     try {
       toast.loading('Generating PDF report...');
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/attendance/report/pdf`, {
+      
+      // Build query parameters based on current filters
+      const queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (statusFilter !== 'all') queryParams.append('status', statusFilter);
+      if (eventTypeFilter !== 'all') queryParams.append('event_type', eventTypeFilter);
+      if (tradeFilter !== 'all' && tradeFilter !== 'All Trades') queryParams.append('trade', tradeFilter);
+      
+      // Add date filters
+      if (dateFilter !== 'all') {
+        const today = new Date();
+        let dateFrom, dateTo;
+        
+        switch (dateFilter) {
+          case 'today':
+            dateFrom = dateTo = today.toISOString().split('T')[0];
+            break;
+          case 'week':
+            dateFrom = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            dateTo = today.toISOString().split('T')[0];
+            break;
+          case 'month':
+            dateFrom = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            dateTo = today.toISOString().split('T')[0];
+            break;
+        }
+        
+        if (dateFrom) queryParams.append('date_from', dateFrom);
+        if (dateTo) queryParams.append('date_to', dateTo);
+      }
+      
+      const queryString = queryParams.toString();
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/attendance/report/pdf${queryString ? '?' + queryString : ''}`;
+      
+      const res = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
